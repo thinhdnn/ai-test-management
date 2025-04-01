@@ -16,7 +16,7 @@ async function main() {
     update: {},
     create: {
       username: "admin",
-      password: await hashPassword("admin123"), // Using bcrypt for consistent hashing
+      password: await hashPassword("admin123"),
       role: "admin",
     },
   });
