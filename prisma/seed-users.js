@@ -19,6 +19,7 @@ async function main() {
   await prisma.user.create({
     data: {
       username: "admin",
+      email: "admin@example.com",
       password: adminPassword,
       role: "admin",
     },
@@ -30,6 +31,7 @@ async function main() {
   await prisma.user.create({
     data: {
       username: "user",
+      email: "user@example.com",
       password: userPassword,
       role: "user",
     },
