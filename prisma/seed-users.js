@@ -20,8 +20,17 @@ async function main() {
     data: {
       username: "admin",
       email: "admin@example.com",
+      name: "Administrator",
       password: adminPassword,
-      role: "admin",
+      roles: {
+        create: [
+          {
+            role: {
+              connect: { name: "Admin" }
+            }
+          }
+        ]
+      }
     },
   });
   console.log("Created admin user");
@@ -32,8 +41,17 @@ async function main() {
     data: {
       username: "user",
       email: "user@example.com",
+      name: "Test User",
       password: userPassword,
-      role: "user",
+      roles: {
+        create: [
+          {
+            role: {
+              connect: { name: "Viewer" }
+            }
+          }
+        ]
+      }
     },
   });
   console.log("Created regular user");
