@@ -1,0 +1,197 @@
+@import "react-day-picker/dist/style.css";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 5.9% 10%;
+    --radius: 0.5rem;
+    --radius-sm: calc(var(--radius) - 4px);
+    --radius-md: calc(var(--radius) - 2px);
+    --radius-lg: var(--radius);
+    --radius-xl: calc(var(--radius) + 4px);
+    --sidebar-ring: var(--ring);
+    --sidebar-border: var(--border);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-foreground: var(--foreground);
+    --sidebar: var(--background);
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+    --sidebar-ring: var(--ring);
+    --sidebar-border: var(--border);
+    --sidebar-accent-foreground: var(--accent-foreground);
+    --sidebar-accent: var(--accent);
+    --sidebar-primary-foreground: var(--primary-foreground);
+    --sidebar-primary: var(--primary);
+    --sidebar-foreground: var(--foreground);
+    --sidebar: var(--card);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* CSS for drag and drop test steps */
+.cursor-move {
+  cursor: move;
+  transition: background-color 0.2s, opacity 0.2s, transform 0.1s;
+}
+
+.cursor-grab {
+  cursor: grab;
+}
+
+.cursor-grabbing {
+  cursor: grabbing !important;
+}
+
+tr[draggable="true"] {
+  user-select: none;
+}
+
+tr[draggable="true"]:hover {
+  background-color: hsl(var(--muted) / 0.5);
+}
+
+tr[draggable="true"]:active {
+  cursor: grabbing;
+  opacity: 0.7;
+  transform: scale(1.01);
+  box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
+  z-index: 10;
+}
+
+tr[draggable="true"].drag-over {
+  position: relative;
+  background-color: hsl(var(--muted) / 0.7);
+}
+
+tr[draggable="true"].drag-over::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 3px;
+  background-color: hsl(var(--primary));
+  z-index: 1;
+  animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+/* CSS for highlight effect when cloning test steps */
+@keyframes highlightPulse {
+  0% {
+    background-color: hsl(var(--primary) / 0.08);
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.2);
+  }
+  50% {
+    background-color: hsl(var(--primary) / 0.15);
+    box-shadow: 0 0 0 4px hsl(var(--primary) / 0.15);
+  }
+  100% {
+    background-color: hsl(var(--primary) / 0.08);
+    box-shadow: 0 0 0 0 hsl(var(--primary) / 0.2);
+  }
+}
+
+.highlight-new-step {
+  animation: highlightPulse 2s ease-in-out;
+}
+
+/* CodeMirror specific styles */
+.cm-editor {
+  height: 100% !important;
+  min-height: 300px !important;
+  max-height: 100% !important;
+  overflow: auto !important;
+}
+
+.cm-scroller {
+  overflow: auto !important;
+  min-height: 300px !important;
+}
+
+.cm-content {
+  min-height: 300px !important;
+}
+
+.import-ai-dialog-content {
+  display: flex;
+  flex-direction: column;
+  max-height: 80vh;
+  min-height: 600px;
+}
+
+.import-ai-dialog-body {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 400px;
+}
+
+.code-editor-container {
+  flex: 1 1 auto;
+  min-height: 350px;
+  overflow: hidden;
+}
