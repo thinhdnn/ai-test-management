@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
+  "buildCommand": "prisma generate && prisma db seed && next build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
@@ -24,5 +24,8 @@
     "POSTGRES_DATABASE": "${POSTGRES_DATABASE}",
     "POSTGRES_URL_NO_SSL": "${POSTGRES_URL_NO_SSL}",
     "POSTGRES_PRISMA_URL": "${POSTGRES_PRISMA_URL}"
+  },
+  "prisma": {
+    "seed": "ts-node prisma/seed.ts"
   }
 } 
