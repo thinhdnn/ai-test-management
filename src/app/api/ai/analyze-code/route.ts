@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { prisma } from "@/lib/prisma";
 
 /**
  * API để phân tích mã Playwright và tạo test step
@@ -7,7 +8,7 @@ import { NextResponse } from "next/server";
  */
 export async function POST(request: Request) {
   try {
-    const { code } = await request.json();
+    const { code, projectId, testCaseId } = await request.json();
 
     if (!code) {
       return NextResponse.json(

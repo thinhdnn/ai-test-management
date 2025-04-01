@@ -53,8 +53,8 @@ A modern test automation management platform that combines the power of Playwrig
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/thinhdnn/ai-test-management.git
-cd ai-test-management
+git clone https://github.com/yourusername/playwright-gemini.git
+cd playwright-gemini
 ```
 
 2. **Install Dependencies**
@@ -86,7 +86,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📁 Project Structure
 
 ```
-ai-test-management/
+playwright-gemini/
 ├── src/
 │   ├── app/
 │   │   ├── api/                 # API endpoints
@@ -157,3 +157,61 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - [Next.js Documentation](https://nextjs.org/docs)
 - [Prisma Documentation](https://www.prisma.io/docs)
 - [Gemini AI Documentation](https://ai.google.dev/docs)
+
+## 🚀 Deployment
+
+### Deploying to Vercel
+
+1. **Prepare Your Repository**
+   - Push your code to GitHub
+   - Make sure your `.env` file is properly configured
+   - Ensure your database is ready for production
+
+2. **Set Up Vercel**
+   - Create an account on [Vercel](https://vercel.com)
+   - Install Vercel CLI (optional):
+     ```bash
+     npm i -g vercel
+     ```
+
+3. **Configure Environment Variables**
+   In your Vercel project settings, add the following environment variables:
+   ```env
+   DATABASE_URL="your-production-database-url"
+   NEXTAUTH_URL="https://your-domain.vercel.app"
+   NEXTAUTH_SECRET="your-production-secret"
+   ```
+
+4. **Deploy Options**
+
+   **Option 1: Deploy via Vercel Dashboard**
+   - Go to [Vercel Dashboard](https://vercel.com/dashboard)
+   - Click "New Project"
+   - Import your GitHub repository
+   - Configure your environment variables
+   - Click "Deploy"
+
+   **Option 2: Deploy via CLI**
+   ```bash
+   # Login to Vercel
+   vercel login
+
+   # Deploy to production
+   vercel --prod
+   ```
+
+5. **Post-Deployment Setup**
+   - Set up your production database
+   - Run database migrations:
+     ```bash
+     vercel env pull .env.production.local
+     npx prisma db push
+     ```
+   - Verify your deployment is working correctly
+
+### Important Notes
+
+- Ensure your `DATABASE_URL` points to a production database (e.g., PostgreSQL on Supabase/Railway)
+- Set a strong `NEXTAUTH_SECRET` for production
+- Configure your domains and SSL certificates if using a custom domain
+- Set up proper database backups and monitoring

@@ -1,19 +1,66 @@
 import { Metadata } from "next";
+import { RBACClient } from "./page.client";
+import { prisma } from "@/lib/db";
 
 export const metadata: Metadata = {
   title: "RBAC Settings",
   description: "Manage role-based access control",
 };
 
-export default function RBACPage() {
+// Lấy dữ liệu cần thiết cho RBAC panel
+async function getRBACData() {
+  // Lấy tất cả roles
+  const roles = await prisma.role.findMany({
+    include: {
+      permissions: {
+        include: {
+          permission: true,
+        },
+      },
+    },
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  console.log("Fetched roles:", JSON.stringify(roles, null, 2));
+
+  // Lấy tất cả permissions
+  const permissions = await prisma.permission.findMany({
+    orderBy: {
+      name: "asc",
+    },
+  });
+
+  // Lấy tất cả users
+  const users = await prisma.user.findMany({
+    include: {
+      roles: {
+        include: {
+          role: true,
+        },
+      },
+    },
+    orderBy: {
+      username: "asc",
+    },
+  });
+
+  return {
+    roles,
+    permissions,
+    users,
+  };
+}
+
+export default async function RBACPage() {
+  const { roles, permissions, users } = await getRBACData();
+
   return (
-    <div className="container mx-auto py-10">
-      <h1 className="text-3xl font-bold mb-8">Role-Based Access Control</h1>
-      <div className="bg-yellow-100 p-4 rounded-md">
-        <p className="text-yellow-800">
-          RBAC management is currently in maintenance. Please check back later.
-        </p>
-      </div>
-    </div>
+    <RBACClient
+      initialRoles={roles}
+      initialPermissions={permissions}
+      initialUsers={users}
+    />
   );
 }

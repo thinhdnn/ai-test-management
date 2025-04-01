@@ -50,11 +50,10 @@ import {
 interface Permission {
   id: string;
   name: string;
-  description?: string | null;
+  description: string;
 }
 
 interface RolePermission {
-  id: string;
   roleId: string;
   permissionId: string;
   permission: Permission;
@@ -63,12 +62,11 @@ interface RolePermission {
 interface Role {
   id: string;
   name: string;
-  description?: string | null;
-  rolePermissions: RolePermission[];
+  description: string;
+  permissions: RolePermission[];
 }
 
 interface UserRole {
-  id: string;
   userId: string;
   roleId: string;
   role: Role;
@@ -76,9 +74,8 @@ interface UserRole {
 
 interface User {
   id: string;
-  username?: string;
+  username: string;
   email: string;
-  name?: string | null;
   roles: UserRole[];
 }
 
@@ -136,7 +133,7 @@ export function RBACClient({
   useEffect(() => {
     const mappings: Record<string, string[]> = {};
     roles.forEach((role) => {
-      mappings[role.id] = role.rolePermissions.map((p) => p.permissionId);
+      mappings[role.id] = role.permissions.map((p) => p.permissionId);
     });
     setRolePermissions(mappings);
   }, [roles]);
@@ -332,7 +329,7 @@ export function RBACClient({
       const createdRole = await response.json();
 
       // Add the new role to the state
-      setRoles((prev) => [...prev, { ...createdRole, rolePermissions: [] }]);
+      setRoles((prev) => [...prev, { ...createdRole, permissions: [] }]);
       setRolePermissions((prev) => ({ ...prev, [createdRole.id]: [] }));
 
       // Reset form and close dialog
@@ -492,10 +489,10 @@ export function RBACClient({
                         </TableCell>
                         <TableCell>{role.description}</TableCell>
                         <TableCell>
-                          {role.rolePermissions.length > 0 ||
+                          {role.permissions.length > 0 ||
                           (rolePermissions[role.id] || []).length > 0 ? (
                             <div className="flex flex-wrap gap-1">
-                              {role.rolePermissions.map((p) => (
+                              {role.permissions.map((p) => (
                                 <span
                                   key={p.permissionId}
                                   className="bg-secondary text-secondary-foreground px-2 py-1 rounded text-xs"
@@ -503,11 +500,11 @@ export function RBACClient({
                                   {p.permission.name}
                                 </span>
                               ))}
-                              {/* Show newly added permissions that aren't yet in role.rolePermissions */}
+                              {/* Show newly added permissions that aren't yet in role.permissions */}
                               {(rolePermissions[role.id] || [])
                                 .filter(
                                   (permId) =>
-                                    !role.rolePermissions.some(
+                                    !role.permissions.some(
                                       (p) => p.permissionId === permId
                                     )
                                 )

@@ -19,18 +19,8 @@ async function main() {
   await prisma.user.create({
     data: {
       username: "admin",
-      email: "admin@example.com",
-      name: "Administrator",
       password: adminPassword,
-      roles: {
-        create: [
-          {
-            role: {
-              connect: { name: "Admin" }
-            }
-          }
-        ]
-      }
+      role: "admin",
     },
   });
   console.log("Created admin user");
@@ -40,18 +30,8 @@ async function main() {
   await prisma.user.create({
     data: {
       username: "user",
-      email: "user@example.com",
-      name: "Test User",
       password: userPassword,
-      roles: {
-        create: [
-          {
-            role: {
-              connect: { name: "Viewer" }
-            }
-          }
-        ]
-      }
+      role: "user",
     },
   });
   console.log("Created regular user");
@@ -59,17 +39,11 @@ async function main() {
   console.log("Seeding finished");
 }
 
-// Chạy nếu được gọi trực tiếp
-if (require.main === module) {
-  main()
-    .catch((e) => {
-      console.error(e);
-      process.exit(1);
-    })
-    .finally(async () => {
-      await prisma.$disconnect();
-    });
-}
-
-// Export để có thể import từ file khác
-module.exports = { main };
+main()
+  .catch((e) => {
+    console.error(e);
+    process.exit(1);
+  })
+  .finally(async () => {
+    await prisma.$disconnect();
+  });

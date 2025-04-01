@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import bcrypt from "bcryptjs";
 import { sign } from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 export async function POST(request: Request) {
   try {
