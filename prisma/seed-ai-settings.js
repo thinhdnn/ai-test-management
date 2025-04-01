@@ -54,4 +54,10 @@ async function main() {
   }
 }
 
-main();
+// Chạy nếu được gọi trực tiếp
+if (require.main === module) {
+  main();
+}
+
+// Export để có thể import từ file khác
+module.exports = { main };

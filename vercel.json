@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "buildCommand": "prisma generate && prisma db seed && next build",
+  "buildCommand": "prisma generate && npx prisma db seed && next build",
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",

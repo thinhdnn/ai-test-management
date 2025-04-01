@@ -120,11 +120,17 @@ async function main() {
   console.log("Role seeding completed!");
 }
 
-main()
-  .catch((e) => {
-    console.error(e);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+// Chạy nếu được gọi trực tiếp
+if (require.main === module) {
+  main()
+    .catch((e) => {
+      console.error(e);
+      process.exit(1);
+    })
+    .finally(async () => {
+      await prisma.$disconnect();
+    });
+}
+
+// Export để có thể import từ file khác
+module.exports = { main };
