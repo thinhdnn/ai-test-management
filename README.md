@@ -53,8 +53,8 @@ A modern test automation management platform that combines the power of Playwrig
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/playwright-gemini.git
-cd playwright-gemini
+git clone https://github.com/thinhdnn/ai-test-management.git
+cd ai-test-management
 ```
 
 2. **Install Dependencies**
@@ -86,7 +86,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📁 Project Structure
 
 ```
-playwright-gemini/
+ai-test-management/
 ├── src/
 │   ├── app/
 │   │   ├── api/                 # API endpoints
