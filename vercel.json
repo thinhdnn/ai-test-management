@@ -1,0 +1,26 @@
+{
+  "version": 2,
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "regions": ["sin1"],
+  "env": {
+    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "DATABASE_URL": "@database-url",
+    "DATABASE_URL_UNPOOLED": "@database-url-unpooled",
+    "PGHOST": "@pg-host",
+    "PGHOST_UNPOOLED": "@pg-host-unpooled",
+    "PGUSER": "@pg-user",
+    "PGDATABASE": "@pg-database",
+    "PGPASSWORD": "@pg-password",
+    "POSTGRES_URL": "@postgres-url",
+    "POSTGRES_URL_NON_POOLING": "@postgres-url-non-pooling",
+    "POSTGRES_USER": "@postgres-user",
+    "POSTGRES_HOST": "@postgres-host",
+    "POSTGRES_PASSWORD": "@postgres-password",
+    "POSTGRES_DATABASE": "@postgres-database",
+    "POSTGRES_URL_NO_SSL": "@postgres-url-no-ssl",
+    "POSTGRES_PRISMA_URL": "@postgres-prisma-url"
+  }
+} 
