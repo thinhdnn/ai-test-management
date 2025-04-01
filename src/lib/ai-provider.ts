@@ -25,18 +25,18 @@ export interface AIProvider {
   ): Promise<string>;
 
   // Additional common methods
-  extractJSONFromText(text: string, provider?: AIServiceType): any;
+  extractJSONFromText(text: string, provider?: AIServiceType): Record<string, unknown>;
 
-  generatePlaywrightTestStep(request: any, provider?: AIServiceType): Promise<any>;
-  generatePlaywrightTestStepWithHTML(request: any, provider?: AIServiceType): Promise<any>;
-  analyzeAndGenerateTestStep(description: string, provider?: AIServiceType): Promise<any>;
+  generatePlaywrightTestStep(request: Record<string, unknown>, provider?: AIServiceType): Promise<Record<string, unknown>>;
+  generatePlaywrightTestStepWithHTML(request: Record<string, unknown>, provider?: AIServiceType): Promise<Record<string, unknown>>;
+  analyzeAndGenerateTestStep(description: string, provider?: AIServiceType): Promise<Record<string, unknown>>;
   generatePlaywrightCodeFromStep(
     stepAction: string,
     stepData?: string | null,
     stepExpected?: string | null,
     provider?: AIServiceType
   ): Promise<string>;
-  analyzePlaywrightCode(playwrightCode: string, provider?: AIServiceType): Promise<any>;
+  analyzePlaywrightCode(playwrightCode: string, provider?: AIServiceType): Promise<Record<string, unknown>>;
 
   // Spelling and vocabulary correction
   fixSpellingAndVocabulary(text: string, provider?: AIServiceType): Promise<string>;

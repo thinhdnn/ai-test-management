@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
@@ -51,10 +51,10 @@ export async function POST(
     });
 
     return NextResponse.json({ success: true, path: filePath });
-  } catch (error: any) {
+  } catch (error: unknown) {
     console.error("Error creating fixture file:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create fixture file" },
+      { error: error instanceof Error ? error.message : "Failed to create fixture file" },
       { status: 500 }
     );
   }

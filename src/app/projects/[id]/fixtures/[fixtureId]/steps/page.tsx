@@ -1,30 +1,17 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import Link from "next/link";
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Table,
-  TableBody,
-  TableCaption,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 import {
   Select,
   SelectContent,
@@ -39,7 +26,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { formatDate } from "@/lib/utils";
@@ -49,17 +35,8 @@ import {
   Pencil,
   Trash2,
   Plus,
-  Eye,
-  EyeOff,
-  GripVertical,
   Copy,
-  Play,
-  FileCode,
   RefreshCw,
-  FileDown,
-  Search,
-  Sparkles,
-  RocketIcon,
   BrainCircuit,
 } from "lucide-react";
 import {
@@ -106,7 +83,6 @@ interface NewStep {
 
 export default function FixtureStepsPage() {
   const params = useParams<{ id: string; fixtureId: string }>();
-  const router = useRouter();
   const projectId = params.id;
   const fixtureId = params.fixtureId;
 
@@ -133,12 +109,6 @@ export default function FixtureStepsPage() {
     disabled: false,
   });
 
-  // Add useRef to reference DOM elements
-  const stepsTableRef = useRef<HTMLTableElement>(null);
-
-  // State for reordering steps
-  const [isReordering, setIsReordering] = useState(false);
-  
   // Selection states
   const [selectedSteps, setSelectedSteps] = useState<string[]>([]);
   const [selectAll, setSelectAll] = useState(false);

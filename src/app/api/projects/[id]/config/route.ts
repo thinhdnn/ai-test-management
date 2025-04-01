@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { PlaywrightService } from "@/lib/playwright-service";
 import fs from "fs";
 import path from "path";
-import { defineConfig } from "@playwright/test";
 
 interface PlaywrightConfig {
   testDir?: string;

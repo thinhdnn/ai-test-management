@@ -12,7 +12,7 @@ export async function GET(
     const testCaseId = searchParams.get("testCaseId");
     const actionType = searchParams.get("actionType");
 
-    let where: any = {
+    const where: Record<string, unknown> = {
       testCase: {
         projectId,
       },

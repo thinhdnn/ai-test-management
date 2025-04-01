@@ -1,14 +1,9 @@
 import { NextResponse } from "next/server";
 import { getAIProvider } from "@/lib/ai-provider";
-import {
-  AnalyzePlaywrightRequest,
-  AnalyzePlaywrightResponse,
-  GeminiTestStepResponse,
-} from "@/types";
 import { prisma } from "@/lib/db";
 
 // Hàm helper để thêm CORS headers vào response
-function corsResponse(body: any, status: number = 200) {
+function corsResponse(body: Record<string, unknown>, status: number = 200) {
   return NextResponse.json(body, {
     status,
     headers: {
@@ -190,7 +185,7 @@ export async function POST(request: Request) {
 }
 
 // Add OPTIONS method for CORS preflight
-export async function OPTIONS(request: Request) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
