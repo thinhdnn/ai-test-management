@@ -6,7 +6,8 @@
   "framework": "nextjs",
   "regions": ["sin1"],
   "env": {
-    "NEXTAUTH_SECRET": "@nextauth-secret",
+    "NEXTAUTH_URL": "https://ai-test-management.vercel.app",
+    "NEXTAUTH_SECRET": "3o7L5FRrU7VhJg/rrT9SPg==",
     "DATABASE_URL": "@database-url",
     "DATABASE_URL_UNPOOLED": "@database-url-unpooled",
     "PGHOST": "@pg-host",
