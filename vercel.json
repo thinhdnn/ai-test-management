@@ -24,8 +24,5 @@
     "POSTGRES_DATABASE": "${POSTGRES_DATABASE}",
     "POSTGRES_URL_NO_SSL": "${POSTGRES_URL_NO_SSL}",
     "POSTGRES_PRISMA_URL": "${POSTGRES_PRISMA_URL}"
-  },
-  "prisma": {
-    "seed": "ts-node prisma/seed.ts"
   }
 } 
