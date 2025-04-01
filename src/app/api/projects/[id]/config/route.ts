@@ -3,7 +3,6 @@ import { prisma } from "@/lib/db";
 import { PlaywrightService } from "@/lib/playwright-service";
 import fs from "fs";
 import path from "path";
-import { defineConfig } from "@playwright/test";
 
 interface PlaywrightConfig {
   testDir?: string;
@@ -11,7 +10,7 @@ interface PlaywrightConfig {
   timeout?: number;
   retries?: number;
   workers?: number;
-  reporter?: string | Array<string | [string, any]>;
+  reporter?: string | Array<string | [string, Record<string, unknown>]>;
   fullyParallel?: boolean;
   forbidOnly?: boolean;
   headless?: boolean;
@@ -19,7 +18,7 @@ interface PlaywrightConfig {
     width: number;
     height: number;
   };
-  [key: string]: any;
+  [key: string]: unknown;
 }
 
 /**
@@ -363,50 +362,19 @@ export async function PATCH(
 /**
  * Helper function to parse configurations from file content
  */
-function parseConfig(content: string, key: string, isNumber = false): any {
-  // Special handling for reporter
-  if (key === 'reporter') {
-    const reporterMatch = content.match(/reporter\s*:\s*(\[[\s\S]*?\]|\s*['"][^'"]*['"]\s*)/);
-    if (reporterMatch) {
-      try {
-        // Check if it's a string reporter (simple format)
-        if (reporterMatch[1].trim().startsWith("'") || reporterMatch[1].trim().startsWith('"')) {
-          // It's a simple string like 'html'
-          const simpleReporter = reporterMatch[1].trim().replace(/['"]/g, '');
-          return [simpleReporter]; // Return as array for consistency
-        }
-        
-        // It's an array, try to parse it
-        const arrayContent = reporterMatch[1].trim();
-        // Extract reporter names directly using regex instead of JSON.parse
-        const reporterNames: string[] = [];
-        const reporterNameRegex = /\[\s*['"]([^'"]+)['"]/g;
-        let match;
-        while ((match = reporterNameRegex.exec(arrayContent)) !== null) {
-          reporterNames.push(match[1]);
-        }
-        
-        return reporterNames.length > 0 ? reporterNames : ['html']; // Default to html if parsing fails
-      } catch (err) {
-        console.error('Error parsing reporter config:', err);
-        return ['html']; // Default to html on error
-      }
-    }
-    return ['html']; // Default reporter
-  }
-
-  // Handle other config values
-  const match = content.match(new RegExp(`${key}\\s*:\\s*([^,}\\n]+)`));
-  if (!match) return undefined;
-
-  const value = match[1].trim();
+function parseConfig(content: string, key: string, isNumber = false): string | number | boolean | undefined {
+  const regex = new RegExp(`${key}:\\s*(['"\`]?)([^'"\\s,}]+)\\1|${key}:\\s*(true|false)`, "i");
+  const match = content.match(regex);
   
-  if (isNumber) {
-    return parseInt(value, 10);
+  if (match) {
+    const value = match[2] || match[3];
+    if (isNumber) {
+      return parseInt(value, 10);
+    }
+    if (value === "true") return true;
+    if (value === "false") return false;
+    return value;
   }
-
-  // Remove quotes and handle true/false
-  if (value === 'true') return true;
-  if (value === 'false') return false;
-  return value.replace(/['"]/g, '');
+  
+  return undefined;
 }

@@ -1,10 +1,5 @@
 import { NextResponse } from "next/server";
 import { getAIProvider } from "@/lib/ai-provider";
-import {
-  AnalyzePlaywrightRequest,
-  AnalyzePlaywrightResponse,
-  GeminiTestStepResponse,
-} from "@/types";
 import { prisma } from "@/lib/db";
 
 // Hàm helper để thêm CORS headers vào response
@@ -136,7 +131,7 @@ export async function POST(request: Request) {
     const nextOrder = lastStep ? lastStep.order + 1 : 1;
 
     // Extract step info from testStepData - sử dụng trực tiếp thông tin từ AI
-    let stepInfo = {
+    const stepInfo = {
       action: "Analyzed action",
       selector: "",
       data: "",
@@ -190,7 +185,7 @@ export async function POST(request: Request) {
 }
 
 // Add OPTIONS method for CORS preflight
-export async function OPTIONS(request: Request) {
+export async function OPTIONS() {
   return new NextResponse(null, {
     status: 200,
     headers: {
