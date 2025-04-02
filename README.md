@@ -2,6 +2,8 @@
 
 A modern test automation management platform that combines the power of Playwright with AI assistance for efficient test case creation and management.
 
+![Test GIF](https://private-user-images.githubusercontent.com/54620666/429626112-0c8b4418-c581-4f0e-9a9f-099a28393e16.gif?jwt=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJnaXRodWIuY29tIiwiYXVkIjoicmF3LmdpdGh1YnVzZXJjb250ZW50LmNvbSIsImtleSI6ImtleTUiLCJleHAiOjE3NDM2MjA1MjksIm5iZiI6MTc0MzYyMDIyOSwicGF0aCI6Ii81NDYyMDY2Ni80Mjk2MjYxMTItMGM4YjQ0MTgtYzU4MS00ZjBlLTlhOWYtMDk5YTI4MzkzZTE2LmdpZj9YLUFtei1BbGdvcml0aG09QVdTNC1ITUFDLVNIQTI1NiZYLUFtei1DcmVkZW50aWFsPUFLSUFWQ09EWUxTQTUzUFFLNFpBJTJGMjAyNTA0MDIlMkZ1cy1lYXN0LTElMkZzMyUyRmF3czRfcmVxdWVzdCZYLUFtei1EYXRlPTIwMjUwNDAyVDE4NTcwOVomWC1BbXotRXhwaXJlcz0zMDAmWC1BbXotU2lnbmF0dXJlPWM2MzYzMjc4ZDM5NTA2OTI1N2MzMTAxODEwZDAxMmQ5Y2FiMjE0Y2IyMmI0NmQwMDU4MzViOTdhYWEyOTQyNzEmWC1BbXotU2lnbmVkSGVhZGVycz1ob3N0In0.MT2mcVZGAhPY5pQV4XXZLFrIQitulxldLlmIPVzOOAg)
+
 ## 🌟 Key Features
 
 - **Project Management**
@@ -25,8 +27,9 @@ A modern test automation management platform that combines the power of Playwrig
   - Custom fixture management
 
 - **AI-Powered Features**
-  - Generate test steps using Gemini AI
-  - Smart test step suggestions
+  - Generate test case name using AI
+  - Generate test steps / fixtures using AI
+  - Smart test step / fixtures suggestions
   - Automatic code generation
   - Natural language processing for test descriptions
 
@@ -42,19 +45,19 @@ A modern test automation management platform that combines the power of Playwrig
 - **Backend**
   - Next.js API Routes
   - Prisma ORM
-  - SQLite Database
+  - SQLite/Postgres Database
   - JWT Authentication
 
 - **Testing**
   - Playwright
-  - Gemini AI Integration
+  - Gemini/GPT/Grok/Claude AI Integration
 
 ## 📦 Installation
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/playwright-gemini.git
-cd playwright-gemini
+git clone https://github.com/thinhdnn/ai-test-management
+cd ai-test-management
 ```
 
 2. **Install Dependencies**
@@ -86,7 +89,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📁 Project Structure
 
 ```
-playwright-gemini/
+ai-test-management/
 ├── src/
 │   ├── app/
 │   │   ├── api/                 # API endpoints
@@ -108,34 +111,6 @@ playwright-gemini/
 ├── playwright-projects/      # Generated test projects
 └── public/                  # Static assets
 ```
-
-## 🔑 Key Features in Detail
-
-### Project Management
-- Create and configure test projects
-- Set up project-specific settings
-- Manage test environments
-- Track project progress
-
-### Test Case Management
-- Create detailed test cases
-- Add step-by-step instructions
-- Support for tags and categorization
-- Version control for test cases
-- Clone and modify existing test cases
-
-### Playwright Integration
-- Automatic test script generation
-- Custom fixture support
-- Multiple browser testing
-- Detailed test reports
-- Screenshot and video capture
-
-### AI Integration
-- Smart test step generation
-- Code suggestions
-- Natural language processing
-- Automated script optimization
 
 ## 🤝 Contributing
 
