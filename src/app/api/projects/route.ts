@@ -37,13 +37,11 @@ export async function GET() {
       return {
         id: project.id,
         name: project.name,
-        description: project.description,
+        description: project.description || "",
         url: project.url,
         browser: project.browser,
         environment: project.environment,
-        library: project.library,
         createdAt: project.createdAt,
-        updatedAt: project.updatedAt,
         testCases: {
           total: project._count.testCases,
           passed,

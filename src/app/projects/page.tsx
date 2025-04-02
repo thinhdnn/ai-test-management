@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
@@ -9,57 +11,75 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatDate } from "@/lib/utils";
-import { prisma } from "@/lib/db";
 import { ProjectDeleteButton } from "@/components/project-delete-button";
+import { useEffect, useState } from "react";
 
-// Fetch projects from database
-async function getProjects() {
-  // Use server-side data fetching with Prisma
-  const projects = await prisma.project.findMany({
-    include: {
-      _count: {
-        select: { testCases: true },
-      },
-      testCases: {
-        select: {
-          status: true,
-        },
-      },
-    },
-  });
-
-  // Transform data to match the structure used in the frontend
-  return projects.map((project) => {
-    const passed = project.testCases.filter(
-      (tc) => tc.status === "passed"
-    ).length;
-    const failed = project.testCases.filter(
-      (tc) => tc.status === "failed"
-    ).length;
-    const pending = project.testCases.filter(
-      (tc) => tc.status === "pending"
-    ).length;
-
-    return {
-      id: project.id,
-      name: project.name,
-      description: project.description || "",
-      url: project.url,
-      browser: project.browser,
-      environment: project.environment,
-      createdAt: project.createdAt,
-      testCases: {
-        total: project._count.testCases,
-        passed,
-        failed,
-        pending,
-      },
-    };
-  });
+interface Project {
+  id: string;
+  name: string;
+  description: string;
+  url: string;
+  browser: string;
+  environment: string;
+  createdAt: string;
+  testCases: {
+    total: number;
+    passed: number;
+    failed: number;
+    pending: number;
+  };
 }
 
-export default async function ProjectsPage() {
-  const projects = await getProjects();
+// Force dynamic rendering to prevent caching issues
+export const dynamic = 'force-dynamic';
+
+export default function ProjectsPage() {
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function fetchProjects() {
+      try {
+        const response = await fetch("/api/projects", {
+          cache: 'no-store' // Disable caching
+        });
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch projects');
+        }
+        
+        const data = await response.json();
+        setProjects(data);
+      } catch (err) {
+        setError(err instanceof Error ? err.message : 'Failed to fetch projects');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchProjects();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="container px-4 py-6 sm:px-6 md:px-8">
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container px-4 py-6 sm:px-6 md:px-8">
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container px-4 py-6 sm:px-6 md:px-8">

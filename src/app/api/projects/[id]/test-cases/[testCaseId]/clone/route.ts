@@ -69,10 +69,7 @@ export async function POST(
     // 4. Create Playwright file for the new test case
     try {
       // Instead of using update-playwright, use consolidate-steps which handles empty steps better
-      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-      const consolidateStepsUrl = `${baseUrl}/api/projects/${projectId}/test-cases/${newTestCase.id}/consolidate-steps`;
-
-      const consolidateResponse = await fetch(consolidateStepsUrl, {
+      const consolidateResponse = await fetch(`/api/projects/${projectId}/test-cases/${newTestCase.id}/consolidate-steps`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
