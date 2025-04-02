@@ -12,6 +12,17 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Set environment variables for build
+ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_URL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_URL_NON_POOLING="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_USER="postgres"
+ENV POSTGRES_HOST="db"
+ENV POSTGRES_PASSWORD="postgres"
+ENV POSTGRES_DATABASE="ai_test_management"
+ENV POSTGRES_URL_NO_SSL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_PRISMA_URL="postgresql://postgres:postgres@db:5432/ai_test_management?connect_timeout=15"
+
 # Generate Prisma client
 RUN npx prisma generate
 
@@ -32,6 +43,17 @@ COPY --from=builder /app/public ./public
 COPY --from=builder /app/.next/standalone ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/prisma ./prisma
+
+# Set environment variables for runtime
+ENV DATABASE_URL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_URL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_URL_NON_POOLING="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_USER="postgres"
+ENV POSTGRES_HOST="db"
+ENV POSTGRES_PASSWORD="postgres"
+ENV POSTGRES_DATABASE="ai_test_management"
+ENV POSTGRES_URL_NO_SSL="postgresql://postgres:postgres@db:5432/ai_test_management"
+ENV POSTGRES_PRISMA_URL="postgresql://postgres:postgres@db:5432/ai_test_management?connect_timeout=15"
 
 # Expose port
 EXPOSE 3000
