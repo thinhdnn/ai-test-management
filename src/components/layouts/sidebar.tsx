@@ -96,7 +96,7 @@ export function Sidebar({ className }: SidebarProps) {
       >
         <div className="flex h-16 items-center border-b px-6">
           <Link href="/" className="flex items-center gap-2 font-semibold">
-            <span className="text-xl">Playwright Gemini</span>
+            <span className="text-xl">AI Test Management</span>
           </Link>
           <Button
             variant="ghost"

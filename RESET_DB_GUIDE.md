@@ -1,6 +1,6 @@
 # Database Reset Tool Guide
 
-The `reset-db.sh` script provides multiple features for managing the Prisma database of your Playwright Gemini application, including resetting the entire database, deleting specific projects or test cases.
+The `reset-db.sh` script provides multiple features for managing the Prisma database of your AI Test Management application, including resetting the entire database, deleting specific projects or test cases.
 
 ## Features
 

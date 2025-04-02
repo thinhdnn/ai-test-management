@@ -103,7 +103,7 @@ function LoginForm() {
     <div className="flex min-h-screen items-center justify-center">
       <div className="mx-auto max-w-md w-full px-4 py-8">
         <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold">Playwright Gemini</h1>
+          <h1 className="text-3xl font-bold">AI Test Management</h1>
           <p className="text-muted-foreground mt-2">Log in to your account</p>
         </div>
         {loginError && (

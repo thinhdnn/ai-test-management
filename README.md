@@ -1,4 +1,4 @@
-# Playwright Gemini
+# AI Test Management
 
 A modern test automation management platform that combines the power of Playwright with AI assistance for efficient test case creation and management.
 

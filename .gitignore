@@ -5,3 +5,4 @@ prisma/prisma/dev.db
 /.next
 .vercel
 .env*.local
+.env

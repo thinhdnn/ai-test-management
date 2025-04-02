@@ -14,7 +14,7 @@ export default function Home() {
     <div className="container mx-auto py-10">
       <div className="flex flex-col items-center justify-center space-y-6 text-center">
         <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl">
-          Playwright Gemini
+          AI Test Management
         </h1>
         <p className="max-w-[700px] text-lg text-muted-foreground">
           Automated testing project management platform with Playwright

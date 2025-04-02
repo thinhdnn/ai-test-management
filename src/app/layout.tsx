@@ -20,7 +20,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Playwright Gemini",
+  title: "AI Test Management",
   description: "Automated testing project management platform with Playwright",
 };
 
