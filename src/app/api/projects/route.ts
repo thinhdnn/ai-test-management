@@ -96,8 +96,8 @@ export async function POST(request: Request) {
     const tempDir = path.join('/tmp', 'playwright-projects');
 
     // Create directory if it doesn't exist
-    if (!fs.existsSync(path.join(process.cwd(), tempDir))) {
-      fs.mkdirSync(path.join(process.cwd(),tempDir ));
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
     }
 
     
