@@ -104,7 +104,7 @@ function LoginForm() {
       <div className="mx-auto max-w-md w-full px-4 py-8">
         <div className="mb-8 text-center">
           <h1 className="text-3xl font-bold">AI Test Management</h1>
-          <p className="text-muted-foreground mt-2">Log in to your account</p>
+          <p className="text-muted-foreground mt-2">Log in to your account - demo account: admin, password: admin123</p>
         </div>
         {loginError && (
           <div className="mb-4 p-3 bg-red-100 text-red-800 rounded-md text-sm">
