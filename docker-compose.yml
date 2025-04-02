@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_test_management
+      - NODE_ENV=production
+      - JWT_SECRET=playwright-gemini-secret-key-change-in-production
+      - POSTGRES_URL=postgresql://postgres:postgres@db:5432/ai_test_management
+      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@db:5432/ai_test_management
+      - POSTGRES_USER=postgres
+      - POSTGRES_HOST=db
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DATABASE=ai_test_management
+      - POSTGRES_URL_NO_SSL=postgresql://postgres:postgres@db:5432/ai_test_management
+      - POSTGRES_PRISMA_URL=postgresql://postgres:postgres@db:5432/ai_test_management?connect_timeout=15
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+
+  db:
+    image: postgres:15-alpine
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ai_test_management
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data: 

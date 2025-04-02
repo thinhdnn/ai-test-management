@@ -30,6 +30,12 @@ interface Project {
   };
 }
 
+interface ProjectDeleteButtonProps {
+  projectId: string;
+  projectName: string;
+  onDelete?: (projectId: string) => void;
+}
+
 // Force dynamic rendering to prevent caching issues
 export const dynamic = 'force-dynamic';
 
@@ -37,6 +43,10 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const handleProjectDelete = (projectId: string) => {
+    setProjects(projects.filter(project => project.id !== projectId));
+  };
 
   useEffect(() => {
     async function fetchProjects() {
@@ -179,6 +189,7 @@ export default function ProjectsPage() {
                 <ProjectDeleteButton
                   projectId={project.id}
                   projectName={project.name}
+                  onDelete={handleProjectDelete}
                 />
               </CardFooter>
             </Card>

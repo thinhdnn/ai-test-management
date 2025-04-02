@@ -18,13 +18,13 @@ import { Trash2 } from "lucide-react";
 interface ProjectDeleteButtonProps {
   projectId: string;
   projectName: string;
-  redirectToProjects?: boolean;
+  onDelete?: (projectId: string) => void;
 }
 
 export function ProjectDeleteButton({
   projectId,
   projectName,
-  redirectToProjects = false,
+  onDelete,
 }: ProjectDeleteButtonProps) {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
@@ -49,11 +49,11 @@ export function ProjectDeleteButton({
       // Show success notification
       toast.success("Project deleted successfully");
 
-      if (redirectToProjects) {
-        // Redirect to projects page if currently on detail page
-        router.push("/projects");
+      // Call onDelete callback if provided
+      if (onDelete) {
+        onDelete(projectId);
       } else {
-        // Refresh the page if currently on list page
+        // Fallback to router refresh if no callback provided
         router.refresh();
       }
     } catch (error) {
