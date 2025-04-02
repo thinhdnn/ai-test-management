@@ -94,13 +94,13 @@ export async function POST(request: Request) {
     const projectDirName = toValidFileName(data.name);
     const projectPath = path.join(
       process.cwd(),
-      "playwright-projects",
+      "/tmp/playwright-projects",
       projectDirName
     );
 
     // Create directory if it doesn't exist
-    if (!fs.existsSync(path.join(process.cwd(), "playwright-projects"))) {
-      fs.mkdirSync(path.join(process.cwd(), "playwright-projects"));
+    if (!fs.existsSync(path.join(process.cwd(), "/tmp/playwright-projects"))) {
+      fs.mkdirSync(path.join(process.cwd(), "/tmp/playwright-projects"));
     }
 
     // Initialize Playwright project using our service
