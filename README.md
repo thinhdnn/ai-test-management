@@ -27,8 +27,9 @@ A modern test automation management platform that combines the power of Playwrig
   - Custom fixture management
 
 - **AI-Powered Features**
-  - Generate test steps using Gemini AI
-  - Smart test step suggestions
+  - Generate test case name using AI
+  - Generate test steps / fixtures using AI
+  - Smart test step / fixtures suggestions
   - Automatic code generation
   - Natural language processing for test descriptions
 
@@ -44,19 +45,19 @@ A modern test automation management platform that combines the power of Playwrig
 - **Backend**
   - Next.js API Routes
   - Prisma ORM
-  - SQLite Database
+  - SQLite/Postgres Database
   - JWT Authentication
 
 - **Testing**
   - Playwright
-  - Gemini AI Integration
+  - Gemini/GPT/Grok/Claude AI Integration
 
 ## 📦 Installation
 
 1. **Clone the Repository**
 ```bash
-git clone https://github.com/yourusername/playwright-gemini.git
-cd playwright-gemini
+git clone https://github.com/thinhdnn/ai-test-management
+cd ai-test-management
 ```
 
 2. **Install Dependencies**
@@ -88,7 +89,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 ## 📁 Project Structure
 
 ```
-playwright-gemini/
+ai-test-management/
 ├── src/
 │   ├── app/
 │   │   ├── api/                 # API endpoints
@@ -110,34 +111,6 @@ playwright-gemini/
 ├── playwright-projects/      # Generated test projects
 └── public/                  # Static assets
 ```
-
-## 🔑 Key Features in Detail
-
-### Project Management
-- Create and configure test projects
-- Set up project-specific settings
-- Manage test environments
-- Track project progress
-
-### Test Case Management
-- Create detailed test cases
-- Add step-by-step instructions
-- Support for tags and categorization
-- Version control for test cases
-- Clone and modify existing test cases
-
-### Playwright Integration
-- Automatic test script generation
-- Custom fixture support
-- Multiple browser testing
-- Detailed test reports
-- Screenshot and video capture
-
-### AI Integration
-- Smart test step generation
-- Code suggestions
-- Natural language processing
-- Automated script optimization
 
 ## 🤝 Contributing
 
