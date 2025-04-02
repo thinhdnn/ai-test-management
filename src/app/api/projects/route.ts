@@ -92,16 +92,15 @@ export async function POST(request: Request) {
 
     // Create Playwright project directory with valid folder name
     const projectDirName = toValidFileName(data.name);
-    const projectPath = path.join(
-      process.cwd(),
-      "/tmp/playwright-projects",
-      projectDirName
-    );
+    const projectPath = path.join('/tmp', 'playwright-projects', projectDirName);
+    const tempDir = path.join('/tmp', 'playwright-projects');
 
     // Create directory if it doesn't exist
-    if (!fs.existsSync(path.join(process.cwd(), "/tmp/playwright-projects"))) {
-      fs.mkdirSync(path.join(process.cwd(), "/tmp/playwright-projects"));
+    if (!fs.existsSync(path.join(process.cwd(), tempDir))) {
+      fs.mkdirSync(path.join(process.cwd(),tempDir ));
     }
+
+    
 
     // Initialize Playwright project using our service
     try {
