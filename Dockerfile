@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/playwright:v1.43.0-jammy AS base
+FROM mcr.microsoft.com/playwright:v1.50.0-noble AS base
 
 WORKDIR /app
 
@@ -22,7 +22,7 @@ RUN npx prisma generate
 
 RUN chmod +x ./reset-db.sh
 
-FROM mcr.microsoft.com/playwright:v1.43.0-jammy AS runner
+FROM mcr.microsoft.com/playwright:v1.50.0-noble AS runner
 
 WORKDIR /app
 
@@ -46,6 +46,10 @@ COPY --from=base /app/public ./public
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/.env* ./
+
+RUN useradd -m playwright
+RUN chown -R playwright:playwright /app
+USER playwright 
 
 RUN chmod +x /usr/local/bin/wait-for-it.sh \
     && chmod +x /usr/local/bin/reset-db.sh
