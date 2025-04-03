@@ -20,10 +20,6 @@ services:
     depends_on:
       ai-db:
         condition: service_healthy
-    volumes:
-      - .:/app
-      - /app/node_modules
-      - /app/.next
 
   ai-db:
     container_name: ai-db
@@ -41,6 +37,3 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-volumes:
-  postgres_data:
