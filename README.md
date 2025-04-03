@@ -1,8 +1,9 @@
 # AI Test Management
 
+![Alt Text](https://i.imgur.com/navSpr4.gif)
+
 A modern test automation management platform that combines the power of Playwright with AI assistance for efficient test case creation and management.
 
-![](https://i.imgur.com/navSpr4.gif)
 
 ## 🌟 Key Features
 
