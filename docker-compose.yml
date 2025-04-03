@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -8,26 +6,27 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - DATABASE_URL=postgresql://postgres:postgres@db:5432/ai_test_management
+      - DATABASE_URL=postgresql://postgres:postgres@ai-db:5432/ai_test_management
       - NODE_ENV=production
       - JWT_SECRET=playwright-gemini-secret-key-change-in-production
-      - POSTGRES_URL=postgresql://postgres:postgres@db:5432/ai_test_management
-      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@db:5432/ai_test_management
+      - POSTGRES_URL=postgresql://postgres:postgres@ai-db:5432/ai_test_management
+      - POSTGRES_URL_NON_POOLING=postgresql://postgres:postgres@ai-db:5432/ai_test_management
       - POSTGRES_USER=postgres
-      - POSTGRES_HOST=db
+      - POSTGRES_HOST=ai-db
       - POSTGRES_PASSWORD=postgres
       - POSTGRES_DATABASE=ai_test_management
-      - POSTGRES_URL_NO_SSL=postgresql://postgres:postgres@db:5432/ai_test_management
-      - POSTGRES_PRISMA_URL=postgresql://postgres:postgres@db:5432/ai_test_management?connect_timeout=15
+      - POSTGRES_URL_NO_SSL=postgresql://postgres:postgres@ai-db:5432/ai_test_management
+      - POSTGRES_PRISMA_URL=postgresql://postgres:postgres@ai-db:5432/ai_test_management?connect_timeout=15
     depends_on:
-      db:
+      ai-db:
         condition: service_healthy
     volumes:
       - .:/app
       - /app/node_modules
       - /app/.next
 
-  db:
+  ai-db:
+    container_name: ai-db
     image: postgres:15-alpine
     ports:
       - "5432:5432"
@@ -44,4 +43,4 @@ services:
       retries: 5
 
 volumes:
-  postgres_data: 
+  postgres_data:
