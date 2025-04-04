@@ -8,3 +8,6 @@ services:
     environment:
       - NODE_ENV=production
       - JWT_SECRET=playwright-gemini-secret-key-change-in-production
+    volumes:
+      - ./prisma:/app/prisma
+      - ./playwright-projects:/app/playwright-projects
