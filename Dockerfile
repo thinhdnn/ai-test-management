@@ -1,60 +1,71 @@
-FROM mcr.microsoft.com/playwright:v1.50.0-noble AS base
+# === Base Stage ===
+FROM ubuntu:noble AS base
 
 WORKDIR /app
 
-RUN apt-get update && apt-get install -y curl \
+# Install Node.js 22 and essential tools
+RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-RUN curl -L https://github.com/vishnubob/wait-for-it/raw/master/wait-for-it.sh -o /usr/local/bin/wait-for-it.sh \
-    && chmod +x /usr/local/bin/wait-for-it.sh
-
+# Copy and install dependencies
 COPY package*.json ./
-
 RUN npm ci
 
+# Copy the full source
 COPY . .
 
-RUN npx prisma generate
+# Set environment variables
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 
-RUN chmod +x ./reset-db.sh
+# Initialize database and generate Prisma client
+RUN npx prisma generate \
+    && chmod +x ./reset-db.sh \
+    && ./reset-db.sh --reset
 
-FROM mcr.microsoft.com/playwright:v1.50.0-noble AS runner
+# Build the Next.js app
+RUN npm run build
+
+# === Runner Stage ===
+FROM ubuntu:noble AS runner
 
 WORKDIR /app
 
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 
-RUN apt-get update && apt-get install -y curl \
+# Install Node.js 22
+RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
+    && apt-get clean && rm -rf /var/lib/apt/lists/*clear
 
-COPY --from=base /usr/local/bin/wait-for-it.sh /usr/local/bin/wait-for-it.sh
-COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
+# Add tini for proper signal handling
+RUN apt-get update && apt-get install -y tini
 
+# Set tini as the entrypoint
+ENTRYPOINT ["/usr/bin/tini", "--"]
+
+# Copy built app from base stage
 COPY --from=base /app/package*.json ./
 COPY --from=base /app/next.config.js ./
 COPY --from=base /app/public ./public
+COPY --from=base /app/.next ./.next
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/.env* ./
 
-RUN useradd -m playwright
-RUN chown -R playwright:playwright /app
-USER playwright 
+# Add non-root user
+RUN useradd -m appuser \
+    && chown -R appuser:appuser /app
 
-RUN chmod +x /usr/local/bin/wait-for-it.sh \
-    && chmod +x /usr/local/bin/reset-db.sh
+USER appuser
 
-# Expose port
 EXPOSE 3000
 
-CMD ["sh", "-c", "/usr/local/bin/wait-for-it.sh ai-db:5432 -- /usr/local/bin/reset-db.sh --reset && npm run build && npm start"]
+# Final run command - simplified to just run npm start
+CMD ["npm", "start"]

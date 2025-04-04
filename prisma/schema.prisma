@@ -1,11 +1,10 @@
 generator client {
   provider = "prisma-client-js"
-  previewFeatures = ["driverAdapters"]
 }
 
 datasource db {
-  provider = "postgresql"
-  url       = env("POSTGRES_URL")
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
 }
 
 model Project {
@@ -173,8 +172,8 @@ model PermissionAssignment {
 
   user          User       @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
   permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  project       Project?   @relation("ProjectPermissions", fields: [resourceId], references: [id], onDelete: Cascade, map: "PermissionAssignment_projectId_fkey")
-  testCase      TestCase?  @relation("TestCasePermissions", fields: [resourceId], references: [id], onDelete: Cascade, map: "PermissionAssignment_testCaseId_fkey")
+  project       Project?   @relation("ProjectPermissions", fields: [resourceId], references: [id], onDelete: Cascade)
+  testCase      TestCase?  @relation("TestCasePermissions", fields: [resourceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, permissionId, resourceType, resourceId])
 }
