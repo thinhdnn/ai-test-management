@@ -58,11 +58,12 @@ COPY --from=base /app/public ./public
 COPY --from=base /app/.next ./.next
 COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/reset-db.sh ./reset-db.sh
+COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
-# Add non-root user
+# Add non-root user and set permissions
 RUN useradd -m appuser \
-    && chown -R appuser:appuser /app
+    && chown -R appuser:appuser /app \
+    && chmod +x /usr/local/bin/reset-db.sh
 
 USER appuser
 

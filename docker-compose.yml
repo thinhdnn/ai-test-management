@@ -13,4 +13,4 @@ services:
       - ./prisma/schema.prisma:/app/prisma/schema.prisma
       - ./playwright-projects:/app/playwright-projects
     command: >
-      sh -c "chmod +x ./reset-db.sh && ./reset-db.sh --reset && npm start"
+      sh -c "/usr/local/bin/reset-db.sh --reset && npm start"
