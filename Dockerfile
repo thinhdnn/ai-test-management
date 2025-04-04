@@ -66,6 +66,3 @@ RUN useradd -m appuser \
 USER appuser
 
 EXPOSE 3000
-
-# Final run command - simplified to just run npm start
-CMD ["npm", "start"]
