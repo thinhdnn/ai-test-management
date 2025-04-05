@@ -8,9 +8,5 @@ services:
     environment:
       - NODE_ENV=production
       - JWT_SECRET=playwright-gemini-secret-key-change-in-production
-    volumes:
-      - ./prisma/migrations:/app/prisma/migrations
-      - ./prisma/schema.prisma:/app/prisma/schema.prisma
-      - ./playwright-projects:/app/playwright-projects
     command: >
       sh -c "/usr/local/bin/reset-db.sh --reset && npm start"

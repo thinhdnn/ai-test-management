@@ -60,9 +60,18 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
-# Add non-root user and set permissions
-RUN useradd -m appuser \
-    && chown -R appuser:appuser /app \
+# Create appuser
+RUN useradd -m appuser
+
+# Set permissions for necessary directories
+RUN chown -R appuser:appuser /app/.next \
+    && chown -R appuser:appuser /app/public \
+    && chown -R appuser:appuser /app/prisma \
+    && chown appuser:appuser /app/package*.json \
+    && chown appuser:appuser /app/next.config.js
+
+# Set permissions for reset-db.sh
+RUN chown appuser:appuser /usr/local/bin/reset-db.sh \
     && chmod +x /usr/local/bin/reset-db.sh
 
 USER appuser
