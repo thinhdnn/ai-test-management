@@ -29,7 +29,7 @@ jobs:
       - name: Copy database
         run: |
           mkdir -p ./data
-          if [ -f ../prisma/dev.db ]; then
+          if [ -f ../data/prisma/dev.db ]; then
             echo "Copying existing database..."
             cp ../prisma/dev.db ./data/prisma/dev.db
           else
