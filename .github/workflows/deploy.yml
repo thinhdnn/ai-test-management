@@ -74,6 +74,3 @@ jobs:
             exit 1
           fi
           echo "Application is ready!"
-
-volumes:
-  - ./prisma:/app/prisma 
