@@ -10,6 +10,6 @@ services:
       - JWT_SECRET=playwright-gemini-secret-key-change-in-production
     volumes:
       - ./playwright-projects:/app/playwright-projects
-      - ./prisma:/app/prisma
+      - ./data:/app/prisma
     command: >
       sh -c "mkdir -p /app/prisma && /usr/local/bin/reset-db.sh --reset && npm start"
