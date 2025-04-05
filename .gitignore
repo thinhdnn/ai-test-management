@@ -1,7 +1,6 @@
 /node_modules
 /playwright-projects
 /public/videos
-prisma/prisma/dev.db
 /.next
 .vercel
 .env*.local
