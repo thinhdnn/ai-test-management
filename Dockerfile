@@ -63,10 +63,12 @@ COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 # Create appuser
 RUN useradd -m appuser
 
-# Set permissions for necessary directories
-RUN chown -R appuser:appuser /app/.next \
+# Create and set permissions for necessary directories
+RUN mkdir -p /app/playwright-projects \
+    && chown -R appuser:appuser /app/.next \
     && chown -R appuser:appuser /app/public \
     && chown -R appuser:appuser /app/prisma \
+    && chown -R appuser:appuser /app/playwright-projects \
     && chown appuser:appuser /app/package*.json \
     && chown appuser:appuser /app/next.config.js
 
