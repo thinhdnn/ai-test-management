@@ -13,8 +13,8 @@ jobs:
     steps:
       - name: Clean workspace
         run: |
-          # Remove everything except important files and directories
-          find . -mindepth 1 -maxdepth 1 ! -name 'prisma' ! -name 'playwright' ! -name '.git' -exec rm -rf {} +
+          # Remove everything except prisma directory
+          find . -mindepth 1 -maxdepth 1 ! -name 'prisma' -exec rm -rf {} +
 
       - name: Checkout code
         uses: actions/checkout@v4
@@ -28,10 +28,10 @@ jobs:
 
       - name: Copy database
         run: |
-          mkdir -p ./prisma
+          mkdir -p ./data
           if [ -f ../prisma/dev.db ]; then
             echo "Copying existing database..."
-            cp ../prisma/dev.db ./prisma/dev.db
+            cp ../prisma/dev.db ./data/dev.db
           else
             echo "No existing database found, will create new one"
           fi
