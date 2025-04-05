@@ -26,6 +26,16 @@ jobs:
         run: |
           docker-compose down || true
 
+      - name: Copy database
+        run: |
+          mkdir -p ./prisma
+          if [ -f ../prisma/dev.db ]; then
+            echo "Copying existing database..."
+            cp ../prisma/dev.db ./prisma/dev.db
+          else
+            echo "No existing database found, will create new one"
+          fi
+
       - name: Pull latest images
         run: |
           docker-compose pull
