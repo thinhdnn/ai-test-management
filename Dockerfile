@@ -10,15 +10,6 @@ RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
-    && apt-get install -y \
-        libatk1.0-0t64 \
-        libatk-bridge2.0-0t64 \
-        libcups2t64 \
-        libxdamage1 \
-        libpango-1.0-0 \
-        libcairo2 \
-        libasound2t64 \
-        libatspi2.0-0t64 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy and install dependencies
@@ -49,20 +40,11 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 ENV DATABASE_URL="file:/app/prisma/dev.db"
 
-# Install Node.js 22 and Playwright dependencies
+# Install Node.js 22
 RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
-    && apt-get install -y \
-        libatk1.0-0t64 \
-        libatk-bridge2.0-0t64 \
-        libcups2t64 \
-        libxdamage1 \
-        libpango-1.0-0 \
-        libcairo2 \
-        libasound2t64 \
-        libatspi2.0-0t64 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Add tini for proper signal handling
@@ -89,9 +71,13 @@ RUN mkdir -p /app/playwright-projects && \
     chown -R playwright:playwright /app/playwright-projects && \
     chmod -R 777 /app/playwright-projects
 
-# Switch to playwright user but allow sudo
-RUN echo "playwright ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+# Allow playwright user to run apt-get without password
+RUN echo "playwright ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt" >> /etc/sudoers
 
+# Switch to playwright user
 USER playwright
+
+# Set environment variable to skip root check
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 EXPOSE 3000
