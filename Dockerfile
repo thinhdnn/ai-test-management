@@ -62,6 +62,10 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
+RUN useradd -m playwright
+RUN chown -R playwright:playwright /app
+USER playwright
+
 
 # Set permissions for reset-db.sh
 RUN chmod +x /usr/local/bin/reset-db.sh
