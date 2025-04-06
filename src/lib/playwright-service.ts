@@ -195,7 +195,7 @@ export class PlaywrightService {
     return new Promise((resolve) => {
       // Commands and expected prompts
       let outputLog = "";
-      const command = "npx";
+      const command = "sudo npx";
       const args = ["create-playwright"];
 
       console.log(`Executing: ${command} ${args.join(" ")} in ${projectPath}`);
