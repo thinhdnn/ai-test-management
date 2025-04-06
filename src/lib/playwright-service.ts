@@ -181,17 +181,21 @@ export class PlaywrightService {
     return new Promise((resolve) => {
       // Commands and expected prompts
       let outputLog = "";
-      const command = "npx";
-      const args = ["create-playwright@latest", "--quiet", "--install-deps", "--lang", useTypescript ? "TypeScript" : "js"];
+      let command = "npx create-playwright@latest --quiet --install-deps";
+
+      // Add language option
+      if (!useTypescript) {
+        command += " --lang=js";
+      }
 
       // Add GitHub Actions option
       if (useGitHub) {
-        args.push("--gha");
+        command += " --gha";
       }
 
-      console.log(`Executing: ${command} ${args.join(" ")} in ${projectPath}`);
+      console.log(`Executing: ${command} in ${projectPath}`);
 
-      const childProcess = spawn(command, args, {
+      const childProcess = spawn(command, {
         cwd: projectPath,
         shell: true,
         stdio: "pipe",
