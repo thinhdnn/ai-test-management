@@ -62,20 +62,16 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
+USER root
+
 # Create playwright user but keep root access
-RUN useradd -m playwright
-RUN chown -R playwright:playwright /app
+RUN chown -R root:root /app
 
 # Create playwright-projects directory with proper permissions
 RUN mkdir -p /app/playwright-projects && \
     chown -R playwright:playwright /app/playwright-projects && \
     chmod -R 777 /app/playwright-projects
 
-# Allow playwright user to run apt-get without password
-RUN echo "playwright ALL=(ALL) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt" >> /etc/sudoers
-
-# Switch to playwright user
-USER playwright
 
 # Set environment variable to skip root check
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
