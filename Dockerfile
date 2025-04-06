@@ -92,6 +92,3 @@ ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 # Install Playwright dependencies
 RUN npm install -g @playwright/test
-
-# Set entrypoint for Playwright
-ENTRYPOINT ["npx", "playwright"]
