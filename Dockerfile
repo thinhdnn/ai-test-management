@@ -80,12 +80,18 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
+# Create playwright user but keep root access
 RUN useradd -m playwright
 RUN chown -R playwright:playwright /app
+
+# Create playwright-projects directory with proper permissions
+RUN mkdir -p /app/playwright-projects && \
+    chown -R playwright:playwright /app/playwright-projects && \
+    chmod -R 777 /app/playwright-projects
+
+# Switch to playwright user but allow sudo
+RUN echo "playwright ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
 USER playwright
-
-
-RUN mkdir -p /app/playwright-projects
-RUN chmod -R 777 /app/playwright-projects
 
 EXPOSE 3000
