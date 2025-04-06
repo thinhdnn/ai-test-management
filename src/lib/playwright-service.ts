@@ -4,13 +4,10 @@ import fs from "fs";
 import { toValidFileName } from "@/lib/utils";
 import { exec } from "child_process";
 import { promisify } from "util";
-import { GeminiService } from "./gemini-service";
 import { prisma } from "@/lib/prisma";
 import util from "util";
 import {
   PlaywrightInitOptions,
-  RunPlaywrightTestOptions,
-  TestStep,
 } from "@/types";
 
 /**

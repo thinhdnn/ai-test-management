@@ -43,7 +43,7 @@ RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*clear
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Add tini for proper signal handling
 RUN apt-get update && apt-get install -y tini
@@ -60,7 +60,7 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
-# Create appuser
+# Create appuser (nhưng không dùng)
 RUN useradd -m appuser
 
 # Create and set permissions for necessary directories
@@ -78,6 +78,7 @@ RUN chown appuser:appuser /usr/local/bin/reset-db.sh \
 
 RUN chmod -R 777 /app/playwright-projects
 
-USER appuser
+# Không chuyển sang user appuser, giữ quyền root
+# USER appuser  # Bỏ dòng này để chạy với root
 
 EXPOSE 3000
