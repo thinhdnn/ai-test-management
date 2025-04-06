@@ -182,12 +182,7 @@ export class PlaywrightService {
       // Commands and expected prompts
       let outputLog = "";
       const command = "npx";
-      const args = ["create-playwright@latest", "--quiet", "--install-deps"];
-
-      // Add language option
-      if (!useTypescript) {
-        args.push("--lang=js");
-      }
+      const args = ["create-playwright@latest", "--quiet", "--install-deps", "--lang", useTypescript ? "TypeScript" : "js"];
 
       // Add GitHub Actions option
       if (useGitHub) {
