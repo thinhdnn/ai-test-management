@@ -1,3 +1,5 @@
+version: '3.8'
+
 services:
   app:
     build:
@@ -7,9 +9,7 @@ services:
       - "3000:3000"
     environment:
       - NODE_ENV=production
-      - JWT_SECRET=playwright-gemini-secret-key-change-in-production
     volumes:
-      - ../playwright-projects:/app/playwright-projects
-      - ../data:/app/prisma
+      - /home/ubuntu/ai-test-management-db:/app/prisma/prisma
     command: >
-      sh -c "mkdir -p /app/prisma && /usr/local/bin/reset-db.sh --reset && npm start"
+      sh -c "mkdir -p /app/prisma/prisma && /usr/local/bin/reset-db.sh --reset && npm start"

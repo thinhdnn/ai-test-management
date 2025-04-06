@@ -26,6 +26,17 @@ jobs:
         run: |
           docker-compose down || true
 
+      - name: Copy database
+        run: |
+          # Create external database directory if not exists
+          mkdir -p /home/ubuntu/ai-test-management-db
+          if [ -f ../prisma/prisma/dev.db ]; then
+            echo "Copying existing database..."
+            cp ../prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/dev.db
+          else
+            echo "No existing database found, will create new one"
+          fi
+
       - name: Pull latest images
         run: |
           docker-compose pull
