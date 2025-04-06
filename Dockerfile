@@ -64,15 +64,34 @@ COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
 USER root
 
-# Create playwright user but keep root access
-RUN chown -R root:root /app
-
 # Create playwright-projects directory with proper permissions
 RUN mkdir -p /app/playwright-projects 
 RUN chmod -R 777 /app/playwright-projects
-
 
 # Set environment variable to skip root check
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 
 EXPOSE 3000
+
+# === Playwright Stage ===
+FROM mcr.microsoft.com/playwright:v1.42.1-jammy AS playwright
+
+WORKDIR /app
+
+# Copy only necessary files for Playwright
+COPY --from=base /app/package*.json ./
+COPY --from=base /app/node_modules ./node_modules
+
+# Create playwright-projects directory
+RUN mkdir -p /app/playwright-projects && \
+    chmod -R 777 /app/playwright-projects
+
+# Set environment variables
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+
+# Install Playwright dependencies
+RUN npm install -g @playwright/test
+
+# Set entrypoint for Playwright
+ENTRYPOINT ["npx", "playwright"]
