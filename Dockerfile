@@ -68,9 +68,8 @@ USER root
 RUN chown -R root:root /app
 
 # Create playwright-projects directory with proper permissions
-RUN mkdir -p /app/playwright-projects && \
-    chown -R playwright:playwright /app/playwright-projects && \
-    chmod -R 777 /app/playwright-projects
+RUN mkdir -p /app/playwright-projects 
+RUN chmod -R 777 /app/playwright-projects
 
 
 # Set environment variable to skip root check
