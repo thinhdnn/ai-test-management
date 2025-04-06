@@ -195,7 +195,7 @@ export class PlaywrightService {
     return new Promise((resolve) => {
       // Commands and expected prompts
       let outputLog = "";
-      const command = "sudo npx";
+      const command = "npx";
       const args = ["create-playwright"];
 
       console.log(`Executing: ${command} ${args.join(" ")} in ${projectPath}`);
@@ -226,18 +226,11 @@ export class PlaywrightService {
         },
         {
           match: ["browsers", "to use"],
-          response:
-            browser === "all"
-              ? "\r" // All (default)
-              : browser === "chromium"
-              ? "\x1B[B\r" // Chromium
-              : browser === "firefox"
-              ? "\x1B[B\x1B[B\r" // Firefox
-              : browser === "webkit"
-              ? "\x1B[B\x1B[B\x1B[B\r" // WebKit
-              : browser === "chrome"
-              ? "\x1B[B\x1B[B\x1B[B\x1B[B\r" // Chrome
-              : "\x1B[B\r", // Chromium (default if unspecified)
+          response: "\r", // Always select "all" browsers
+        },
+        {
+          match: ["Install", "Playwright", "operating system dependencies"],
+          response: "y\r", // Always say yes to install OS dependencies
         },
       ];
 
