@@ -182,7 +182,7 @@ export class PlaywrightService {
       // Commands and expected prompts
       let outputLog = "";
       const command = "npx";
-      const args = ["create-playwright@latest", "--", "--quiet", "--install-deps"];
+      const args = ["create-playwright@latest", "--quiet", "--install-deps"];
 
       // Add language option
       if (!useTypescript) {
