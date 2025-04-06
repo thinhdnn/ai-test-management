@@ -1,93 +1,153 @@
-# === Base Stage ===
-FROM ubuntu:noble AS base
+# Base stage
+FROM node:20-slim AS base
 
-USER root
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    openssl \
+    && rm -rf /var/lib/apt/lists/*
 
+# Builder stage
+FROM base AS builder
+
+# Install build dependencies
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
 WORKDIR /app
 
-# Install Node.js 22 and essential tools
-RUN apt-get update && apt-get install -y curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && apt-get install -y \
-        libatk1.0-0t64 \
-        libatk-bridge2.0-0t64 \
-        libcups2t64 \
-        libxdamage1 \
-        libpango-1.0-0 \
-        libcairo2 \
-        libasound2t64 \
-        libatspi2.0-0t64 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Copy and install dependencies
+# Copy package files
 COPY package*.json ./
-RUN npm ci
+COPY prisma ./prisma/
 
-# Copy the full source
+# Install dependencies
+RUN npm install
+
+# Copy source code
 COPY . .
 
-# Set environment variables
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+# Generate Prisma client
+RUN npx prisma generate
 
-# Initialize database and generate Prisma client
-RUN npx prisma generate \
-    && chmod +x ./reset-db.sh \
-    && ./reset-db.sh --reset
-
-# Build the Next.js app
+# Build the application
 RUN npm run build
 
-# === Runner Stage ===
-FROM ubuntu:noble AS runner
+# Runner stage
+FROM base AS runner
 
-WORKDIR /app
+# Install Playwright dependencies
+RUN apt-get update && apt-get install -y \
+    libwebkit2gtk-4.0-37 \
+    libgtk-3-0 \
+    libasound2 \
+    libnss3 \
+    libxss1 \
+    libatk1.0-0t64 \
+    libatk-bridge2.0-0t64 \
+    libcups2 \
+    libdrm2 \
+    libxkbcommon0 \
+    libxcomposite1 \
+    libxdamage1 \
+    libxfixes3 \
+    libxrandr2 \
+    libgbm1 \
+    libpango-1.0-0 \
+    libcairo2 \
+    libasound2-data \
+    libatk-bridge2.0-0 \
+    libatk1.0-0 \
+    libatk1.0-data \
+    libatspi2.0-0 \
+    libcairo-gobject2 \
+    libcolord2 \
+    libcups2 \
+    libepoxy0 \
+    libfontconfig1 \
+    libgdk-pixbuf2.0-0 \
+    libgdk-pixbuf2.0-common \
+    libgraphite2-3 \
+    libgtk-3-0 \
+    libgtk-3-common \
+    libharfbuzz0b \
+    libjbig0 \
+    libjpeg-turbo8 \
+    libjpeg8 \
+    liblcms2-2 \
+    libnspr4 \
+    libnss3 \
+    libpango-1.0-0 \
+    libpangocairo-1.0-0 \
+    libpangoft2-1.0-0 \
+    libpixman-1-0 \
+    librest-0.7-0 \
+    libsoup2.4-1 \
+    libthai-data \
+    libthai0 \
+    libtiff5 \
+    libwayland-client0 \
+    libwayland-cursor0 \
+    libwayland-egl1 \
+    libwayland-server0 \
+    libwebp6 \
+    libwebpdemux2 \
+    libwoff1 \
+    libx11-6 \
+    libx11-data \
+    libx11-xcb1 \
+    libxau6 \
+    libxcb1 \
+    libxcb-render0 \
+    libxcb-shm0 \
+    libxcomposite1 \
+    libxcursor1 \
+    libxdamage1 \
+    libxdmcp6 \
+    libxext6 \
+    libxfixes3 \
+    libxi6 \
+    libxinerama1 \
+    libxkbcommon0 \
+    libxrandr2 \
+    libxrender1 \
+    libxss1 \
+    libxtst6 \
+    x11-common \
+    xkb-data \
+    && rm -rf /var/lib/apt/lists/*
 
-ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_SHARP_PATH=/app/node_modules/sharp
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+# Create a non-root user
+RUN useradd -m -s /bin/bash playwright
 
-# Install Node.js 22 and Playwright dependencies
-RUN apt-get update && apt-get install -y curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && apt-get install -y \
-        libatk1.0-0t64 \
-        libatk-bridge2.0-0t64 \
-        libcups2t64 \
-        libxdamage1 \
-        libpango-1.0-0 \
-        libcairo2 \
-        libasound2t64 \
-        libatspi2.0-0t64 \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
-
-# Add tini for proper signal handling
-RUN apt-get update && apt-get install -y tini
-
-# Set tini as the entrypoint
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
-# Copy built app from base stage
-COPY --from=base /app/package*.json ./
-COPY --from=base /app/next.config.js ./
-COPY --from=base /app/public ./public
-COPY --from=base /app/.next ./.next
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
-
-RUN useradd -m playwright
-RUN chown -R playwright:playwright /app
-USER playwright
-
-# Set permissions for reset-db.sh
+# Copy reset-db.sh and set permissions
+COPY reset-db.sh /usr/local/bin/
 RUN chmod +x /usr/local/bin/reset-db.sh
 
-RUN mkdir -p /app/playwright-projects
-RUN chmod -R 777 /app/playwright-projects
+# Create necessary directories
+RUN mkdir -p /app/playwright-projects && \
+    chown -R playwright:playwright /app/playwright-projects
 
+# Switch to non-root user
+USER playwright
+
+# Set working directory
+WORKDIR /app
+
+# Copy package files
+COPY --from=builder --chown=playwright:playwright /app/package*.json ./
+COPY --from=builder --chown=playwright:playwright /app/prisma ./prisma
+COPY --from=builder --chown=playwright:playwright /app/dist ./dist
+COPY --from=builder --chown=playwright:playwright /app/public ./public
+COPY --from=builder --chown=playwright:playwright /app/.next ./.next
+
+# Install production dependencies
+RUN npm install --production
+
+# Expose port
 EXPOSE 3000
+
+# Start the application
+CMD ["npm", "start"]
