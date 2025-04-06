@@ -182,17 +182,7 @@ export class PlaywrightService {
       // Commands and expected prompts
       let outputLog = "";
       let command = "npx create-playwright@latest --quiet --install-deps";
-
-      // Add language option
-      if (!useTypescript) {
-        command += " --lang=js";
-      }
-
-      // Add GitHub Actions option
-      if (useGitHub) {
-        command += " --gha";
-      }
-
+      
       console.log(`Executing: ${command} in ${projectPath}`);
 
       const childProcess = spawn(command, {
