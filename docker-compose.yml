@@ -12,4 +12,4 @@ services:
     volumes:
       - /home/ubuntu/ai-test-management-db:/app/prisma/prisma
     command: >
-      sh -c "mkdir -p /app/prisma/prisma && /usr/local/bin/reset-db.sh --reset && npm start"
+      sh -c "mkdir -p /app/prisma/prisma && npm start"
