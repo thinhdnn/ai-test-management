@@ -225,7 +225,7 @@ export class PlaywrightService {
           response: "y\r",
         },
         {
-          match: ["Install Playwright operating system dependencies (requires sudo / root - can be done manually via 'sudo npx playwright install-deps')"],
+          match: ["Install Playwright operating system dependencies"],
           response: "y\r", // Always say yes to install OS dependencies
         },
       ];
@@ -245,13 +245,11 @@ export class PlaywrightService {
           // Set a timeout before responding to avoid synchronization issues
           setTimeout(() => {
             console.log(
-              `Sending response for prompt ${index + 1}: ${promptPatterns[
-                index
-              ].match.join(", ")}`
+              `Sending response for prompt ${index + 1}: ${promptPatterns[index].match}`
             );
             childProcess.stdin.write(promptPatterns[index].response);
             bufferOutput = ""; // Clear buffer after responding
-          }, 300);
+          }, 100); // Reduce timeout to 100ms
         }
       };
 
@@ -268,12 +266,8 @@ export class PlaywrightService {
             !hasResponded[index] &&
             (index === 0 || hasResponded[index - 1])
           ) {
-            // Check if all keywords are in the buffer
-            const allMatched = prompt.match.every((keyword) =>
-              bufferOutput.toLowerCase().includes(keyword.toLowerCase())
-            );
-
-            if (allMatched) {
+            // Check if the prompt text is in the buffer
+            if (bufferOutput.includes(prompt.match[0])) {
               respondToPrompt(index);
             }
           }
