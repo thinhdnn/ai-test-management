@@ -76,6 +76,8 @@ RUN mkdir -p /app/playwright-projects \
 RUN chown appuser:appuser /usr/local/bin/reset-db.sh \
     && chmod +x /usr/local/bin/reset-db.sh
 
+RUN chmod -R 777 /app/playwright-projects
+
 USER appuser
 
 EXPOSE 3000
