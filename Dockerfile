@@ -1,6 +1,8 @@
 # === Base Stage ===
 FROM ubuntu:noble AS base
 
+USER root
+
 WORKDIR /app
 
 # Install Node.js 22 and essential tools
@@ -60,25 +62,12 @@ COPY --from=base /app/node_modules ./node_modules
 COPY --from=base /app/prisma ./prisma
 COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
 
-# Create appuser (nhưng không dùng)
-RUN useradd -m appuser
-
-# Create and set permissions for necessary directories
-RUN mkdir -p /app/playwright-projects \
-    && chown -R appuser:appuser /app/.next \
-    && chown -R appuser:appuser /app/public \
-    && chown -R appuser:appuser /app/prisma \
-    && chown -R appuser:appuser /app/playwright-projects \
-    && chown appuser:appuser /app/package*.json \
-    && chown appuser:appuser /app/next.config.js
 
 # Set permissions for reset-db.sh
-RUN chown appuser:appuser /usr/local/bin/reset-db.sh \
-    && chmod +x /usr/local/bin/reset-db.sh
+RUN chmod +x /usr/local/bin/reset-db.sh
 
+RUN mkdir -p /app/playwright-projects
 RUN chmod -R 777 /app/playwright-projects
 
-# Không chuyển sang user appuser, giữ quyền root
-# USER appuser  # Bỏ dòng này để chạy với root
 
 EXPOSE 3000
