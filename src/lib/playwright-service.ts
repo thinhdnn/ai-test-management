@@ -178,25 +178,21 @@ export class PlaywrightService {
       fs.mkdirSync(projectPath, { recursive: true });
     }
 
-    // Pre-configure package.json to avoid some prompts
-    const packageJsonPath = path.join(projectPath, "package.json");
-    if (!fs.existsSync(packageJsonPath)) {
-      const packageJson = {
-        name: path.basename(projectPath),
-        version: "1.0.0",
-        description: "Playwright Test Project",
-        scripts: {
-          test: "playwright test",
-        },
-      };
-      fs.writeFileSync(packageJsonPath, JSON.stringify(packageJson, null, 2));
-    }
-
     return new Promise((resolve) => {
       // Commands and expected prompts
       let outputLog = "";
       const command = "npx";
-      const args = ["create-playwright"];
+      const args = ["create-playwright@latest", "--", "--quiet", "--install-deps"];
+
+      // Add language option
+      if (!useTypescript) {
+        args.push("--lang=js");
+      }
+
+      // Add GitHub Actions option
+      if (useGitHub) {
+        args.push("--gha");
+      }
 
       console.log(`Executing: ${command} ${args.join(" ")} in ${projectPath}`);
 
@@ -206,72 +202,10 @@ export class PlaywrightService {
         stdio: "pipe",
       });
 
-      // Patterns to detect prompts
-      const promptPatterns = [
-        {
-          match: ["Do you want to use TypeScript or JavaScript"],
-          response: useTypescript ? "\r" : "\x1B[B\r", // Down and Enter if JavaScript
-        },
-        {
-          match: ["Where to put your end-to-end tests"],
-          response: testDir !== "tests" ? `${testDir}\r` : "\r", // Enter if default
-        },
-        {
-          match: ["Add a GitHub Actions workflow"],
-          response: useGitHub ? "y\r" : "n\r",
-        },
-        {
-          match: ["Install Playwright browsers"],
-          response: "y\r",
-        },
-        {
-          match: ["Install Playwright operating system dependencies"],
-          response: "y\r", // Always say yes to install OS dependencies
-        },
-      ];
-
-      // Keep track of current prompt state
-      let lastPromptIndex = -1;
-      let bufferOutput = "";
-      let hasResponded = Array(promptPatterns.length).fill(false);
-
-      // Define a function to respond to prompts with timeout
-      const respondToPrompt = (index: number) => {
-        // Only respond if this prompt hasn't been handled yet
-        if (!hasResponded[index]) {
-          hasResponded[index] = true;
-          lastPromptIndex = index;
-
-          // Set a timeout before responding to avoid synchronization issues
-          setTimeout(() => {
-            console.log(
-              `Sending response for prompt ${index + 1}: ${promptPatterns[index].match}`
-            );
-            childProcess.stdin.write(promptPatterns[index].response);
-            bufferOutput = ""; // Clear buffer after responding
-          }, 100); // Reduce timeout to 100ms
-        }
-      };
-
       childProcess.stdout.on("data", (data) => {
         const output = data.toString();
         outputLog += output;
-        bufferOutput += output;
         console.log(`Playwright Init Output: ${output}`);
-
-        // Check all prompt patterns
-        promptPatterns.forEach((prompt, index) => {
-          // Only consider prompts in order
-          if (
-            !hasResponded[index] &&
-            (index === 0 || hasResponded[index - 1])
-          ) {
-            // Check if the prompt text is in the buffer
-            if (bufferOutput.includes(prompt.match[0])) {
-              respondToPrompt(index);
-            }
-          }
-        });
       });
 
       childProcess.stderr.on("data", (data) => {

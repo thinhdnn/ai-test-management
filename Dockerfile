@@ -10,6 +10,15 @@ RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
+    && apt-get install -y \
+        libatk1.0-0t64 \
+        libatk-bridge2.0-0t64 \
+        libcups2t64 \
+        libxdamage1 \
+        libpango-1.0-0 \
+        libcairo2 \
+        libasound2t64 \
+        libatspi2.0-0t64 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Copy and install dependencies
@@ -40,11 +49,20 @@ ENV NEXT_TELEMETRY_DISABLED=1
 ENV NEXT_SHARP_PATH=/app/node_modules/sharp
 ENV DATABASE_URL="file:/app/prisma/dev.db"
 
-# Install Node.js 22
+# Install Node.js 22 and Playwright dependencies
 RUN apt-get update && apt-get install -y curl gnupg \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y nodejs \
     && npm install -g npm \
+    && apt-get install -y \
+        libatk1.0-0t64 \
+        libatk-bridge2.0-0t64 \
+        libcups2t64 \
+        libxdamage1 \
+        libpango-1.0-0 \
+        libcairo2 \
+        libasound2t64 \
+        libatspi2.0-0t64 \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Add tini for proper signal handling
@@ -66,12 +84,10 @@ RUN useradd -m playwright
 RUN chown -R playwright:playwright /app
 USER playwright
 
-
 # Set permissions for reset-db.sh
 RUN chmod +x /usr/local/bin/reset-db.sh
 
 RUN mkdir -p /app/playwright-projects
 RUN chmod -R 777 /app/playwright-projects
-
 
 EXPOSE 3000
