@@ -209,27 +209,23 @@ export class PlaywrightService {
       // Patterns to detect prompts
       const promptPatterns = [
         {
-          match: ["TypeScript", "JavaScript"],
+          match: ["Do you want to use TypeScript or JavaScript"],
           response: useTypescript ? "\r" : "\x1B[B\r", // Down and Enter if JavaScript
         },
         {
-          match: ["Where", "tests", "end-to-end"],
+          match: ["Where to put your end-to-end tests"],
           response: testDir !== "tests" ? `${testDir}\r` : "\r", // Enter if default
         },
         {
-          match: ["GitHub Actions", "workflow"],
+          match: ["Add a GitHub Actions workflow"],
           response: useGitHub ? "y\r" : "n\r",
         },
         {
-          match: ["Install", "Playwright", "browsers"],
+          match: ["Install Playwright browsers"],
           response: "y\r",
         },
         {
-          match: ["browsers", "to use"],
-          response: "\r", // Always select "all" browsers
-        },
-        {
-          match: ["Install", "Playwright", "operating system dependencies"],
+          match: ["Install Playwright operating system dependencies (requires sudo / root - can be done manually via 'sudo npx playwright install-deps')"],
           response: "y\r", // Always say yes to install OS dependencies
         },
       ];
