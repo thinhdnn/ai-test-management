@@ -22,9 +22,13 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Stop existing containers
+      - name: Stop and remove existing containers
         run: |
           docker-compose down || true
+          # Remove all unused images
+          docker image prune -f
+          # Remove specific images if they exist
+          docker rmi $(docker images -q 'ai-test-management*') || true
 
       - name: Copy database
         run: |
