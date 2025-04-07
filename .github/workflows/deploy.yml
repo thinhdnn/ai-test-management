@@ -35,6 +35,7 @@ jobs:
           # Create external database directory if not exists
           mkdir -p /home/ubuntu/ai-test-management-db
           cp -n prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/dev.db
+          cp -n prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/prisma/dev.db
 
       - name: Pull latest images
         run: |
