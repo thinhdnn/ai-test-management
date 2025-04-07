@@ -18,7 +18,7 @@ RUN npm install
 # Copy source and build
 COPY . .
 ENV NODE_ENV=production
-ENV DATABASE_URL="file:/app/prisma/prisma/dev.db"
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 
 # Initialize and build
 RUN chmod +x ./reset-db.sh && \
