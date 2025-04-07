@@ -1,94 +1,40 @@
-# === Base Stage ===
-FROM ubuntu:noble AS base
-
-USER root
+FROM ubuntu:noble
 
 WORKDIR /app
 
-# Install Node.js 22 and essential tools
-RUN apt-get update && apt-get install -y curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Install Node.js and dependencies
+RUN apt-get update && \
+    apt-get install -y curl gnupg tini && \
+    curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && \
+    apt-get install -y nodejs && \
+    npm install -g npm && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
 
 # Copy and install dependencies
-COPY package*.json ./
-RUN npm ci
+COPY package*.json prisma ./
+RUN npm install
 
-# Copy the full source
+# Copy source and build
 COPY . .
-
-# Set environment variables
-ENV DATABASE_URL="file:/app/prisma/dev.db"
-
-# Initialize database and generate Prisma client
-RUN npx prisma generate \
-    && chmod +x ./reset-db.sh \
-    && ./reset-db.sh --reset
-
-# Build the Next.js app
-RUN npm run build
-
-# === Runner Stage ===
-FROM ubuntu:noble AS runner
-
-WORKDIR /app
-
 ENV NODE_ENV=production
-ENV NEXT_TELEMETRY_DISABLED=1
-ENV NEXT_SHARP_PATH=/app/node_modules/sharp
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+ENV DATABASE_URL="file:/app/prisma/prisma/dev.db"
 
-# Install Node.js 22
-RUN apt-get update && apt-get install -y curl gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && npm install -g npm \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+# Initialize and build
+RUN chmod +x ./reset-db.sh && \
+    ./reset-db.sh --reset && \
+    npm run build
 
-# Add tini for proper signal handling
-RUN apt-get update && apt-get install -y tini
-
-# Set tini as the entrypoint
-ENTRYPOINT ["/usr/bin/tini", "--"]
-
-# Copy built app from base stage
-COPY --from=base /app/package*.json ./
-COPY --from=base /app/next.config.js ./
-COPY --from=base /app/public ./public
-COPY --from=base /app/.next ./.next
-COPY --from=base /app/node_modules ./node_modules
-COPY --from=base /app/prisma ./prisma
-COPY --from=base /app/reset-db.sh /usr/local/bin/reset-db.sh
-
-USER root
-
-# Create playwright-projects directory with proper permissions
-RUN mkdir -p /app/playwright-projects 
-RUN chmod -R 777 /app/playwright-projects
-
-# Set environment variable to skip root check
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
-
-EXPOSE 3000
-
-# === Playwright Stage ===
-FROM mcr.microsoft.com/playwright:v1.42.1-jammy AS playwright
-
-WORKDIR /app
-
-# Copy only necessary files for Playwright
-COPY --from=base /app/package*.json ./
-COPY --from=base /app/node_modules ./node_modules
-
-# Create playwright-projects directory
-RUN mkdir -p /app/playwright-projects && \
+# Setup permissions
+RUN chmod -R 755 /app/.next && \
+    mkdir -p /app/playwright-projects && \
     chmod -R 777 /app/playwright-projects
 
-# Set environment variables
-ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
-ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+# Create and setup Playwright project
+RUN mkdir -p /app/playwright-projects/default && \
+    cd /app/playwright-projects/default && \
+    npx create-playwright@latest --quiet --install-deps
 
-# Install Playwright dependencies
-RUN npm install -g @playwright/test
+# Set entrypoint and expose port
+ENTRYPOINT ["/usr/bin/tini", "--"]
+EXPOSE 3000
