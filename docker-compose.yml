@@ -10,5 +10,5 @@ services:
     environment:
       - NODE_ENV=production
     volumes:
-      - /home/ubuntu/ai-test-management-db/dev.db:/app/prisma/dev.db
+    #  - /home/ubuntu/ai-test-management-db/dev.db:/app/prisma/dev.db
       - /home/ubuntu/ai-test-management-playwright-projects:/app/playwright-projects

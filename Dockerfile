@@ -21,9 +21,7 @@ ENV NODE_ENV=production
 ENV DATABASE_URL="file:/app/prisma/dev.db"
 
 # Initialize and build
-RUN chmod +x ./reset-db.sh && \
-    ./reset-db.sh --reset && \
-    npm run build
+RUN npm run build
 
 # Setup permissions
 RUN chmod -R 755 /app/.next && \
