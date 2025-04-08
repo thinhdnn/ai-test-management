@@ -33,12 +33,12 @@ jobs:
       - name: Copy database
         run: |
           # Create external database directory if not exists
-          mkdir -p /home/ubuntu/ai-test-management-db
-          chmod 777 /home/ubuntu/ai-test-management-db
+          sudo mkdir -p /home/ubuntu/ai-test-management-db
+          sudo chmod 777 /home/ubuntu/ai-test-management-db
           
           # Create prisma directory with proper permissions
-          mkdir -p /home/ubuntu/ai-test-management-db/prisma
-          chmod 777 /home/ubuntu/ai-test-management-db/prisma
+          sudo mkdir -p /home/ubuntu/ai-test-management-db/prisma
+          sudochmod 777 /home/ubuntu/ai-test-management-db/prisma
           
           # Copy database files if they don't exist
           if [ -f prisma/prisma/dev.db ]; then
