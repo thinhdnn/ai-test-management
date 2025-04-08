@@ -36,15 +36,10 @@ jobs:
           sudo mkdir -p /home/ubuntu/ai-test-management-db
           sudo chmod 777 /home/ubuntu/ai-test-management-db
           
-          # Create prisma directory with proper permissions
-          sudo mkdir -p /home/ubuntu/ai-test-management-db/prisma
-          sudo chmod 777 /home/ubuntu/ai-test-management-db/prisma
-          
           # Copy database files if they don't exist
           if [ -f prisma/prisma/dev.db ]; then
             echo "Copying existing database..."
             cp --update=none prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/dev.db
-            cp --update=none prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/prisma/dev.db
           else
             echo "No existing database found, will create new one"
           fi
