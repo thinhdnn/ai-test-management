@@ -34,7 +34,7 @@ jobs:
         run: |
           # Create external database directory if not exists
           sudo mkdir -p /home/ubuntu/ai-test-management-db
-          sudo chmod 777 /home/ubuntu/ai-test-management-db
+          sudo chmod -R 777 /home/ubuntu/ai-test-management-db
           
           # Copy database files if they don't exist
           if [ -f prisma/prisma/dev.db ]; then

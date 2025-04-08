@@ -38,3 +38,4 @@ RUN mkdir -p /app/playwright-projects/default && \
 # Set entrypoint and expose port
 ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
+CMD ["npm", "start"]
