@@ -9,6 +9,7 @@ const PUBLIC_PATHS = [
   "/api/auth/logout",
   "/api/auth/verify",
   "/api/gemini/playwright",
+  "/api/database",
 ];
 
 // Add your Chrome extension origin
