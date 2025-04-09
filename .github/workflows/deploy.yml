@@ -44,7 +44,7 @@ jobs:
         run: |
           docker-compose up -d
           # Wait for container to be running
-          timeout=60
+          timeout=100
           until docker-compose ps | grep -q "Up" || [ $timeout -eq 0 ]; do
             echo "Waiting for container to start..."
             sleep 5
