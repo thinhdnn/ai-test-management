@@ -11,11 +11,17 @@ RUN apt-get update && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# Copy and install dependencies
-COPY package*.json prisma ./
+# Copy package.json and package-lock.json first for better caching
+COPY package*.json ./
 RUN npm install
 
-# Copy source and build
+# Copy Prisma files separately to make sure prisma directory is complete
+COPY prisma ./prisma/
+
+# Generate Prisma client
+RUN npx prisma generate
+
+# Copy rest of the source code
 COPY . .
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:/app/prisma/dev.db"

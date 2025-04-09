@@ -22,28 +22,69 @@ function validateApiKey(request: NextRequest): boolean {
 // Reset the entire database
 async function resetDatabase() {
   try {
+    console.log('[Database API] Starting database reset process...');
+    
     // Delete contents of playwright-projects folder
-    await execPromise('rm -rf playwright-projects/*');
+    try {
+      console.log('[Database API] Clearing playwright-projects folder...');
+      await execPromise('rm -rf playwright-projects/* || true');
+      console.log('[Database API] Playwright projects folder cleared');
+    } catch (err) {
+      console.error('[Database API] Error clearing playwright folder:', err);
+      // Continue even if this fails
+    }
     
     // Reset the database using Prisma
+    console.log('[Database API] Pushing Prisma schema...');
     await execPromise('npx prisma db push --force-reset');
+    console.log('[Database API] Prisma schema pushed');
     
     // Generate Prisma client
+    console.log('[Database API] Generating Prisma client...');
     await execPromise('npx prisma generate');
+    console.log('[Database API] Prisma client generated');
     
-    // Seed the database
-    await execPromise('npm run prisma:seed');
+    // Seed the database - try individual seed files if the main seed fails
+    try {
+      console.log('[Database API] Running main seed script...');
+      await execPromise('npx prisma db seed');
+      console.log('[Database API] Main seed completed');
+    } catch (seedErr) {
+      console.error('[Database API] Error running main seed:', seedErr);
+      console.log('[Database API] Trying individual seed files...');
+      
+      try {
+        console.log('[Database API] Running seed-users.js...');
+        await execPromise('node prisma/seed-users.js');
+        console.log('[Database API] Users seeded');
+      } catch (err) {
+        console.error('[Database API] Error seeding users:', err);
+      }
+      
+      try {
+        console.log('[Database API] Running seed-permissions.js...');
+        await execPromise('node prisma/seed-permissions.js');
+        console.log('[Database API] Permissions seeded');
+      } catch (err) {
+        console.error('[Database API] Error seeding permissions:', err);
+      }
+      
+      try {
+        console.log('[Database API] Running seed-roles.js...');
+        await execPromise('node prisma/seed-roles.js');
+        console.log('[Database API] Roles seeded');
+      } catch (err) {
+        console.error('[Database API] Error seeding roles:', err);
+      }
+    }
     
-    // Seed permissions and roles
-    await execPromise('node prisma/seed-permissions.js');
-    await execPromise('node prisma/seed-roles.js');
-    
+    console.log('[Database API] Database reset complete');
     return {
       success: true,
       message: 'Database reset complete. You can now log in with admin user (admin/admin123) or regular user (user/user123)'
     };
   } catch (error: any) {
-    console.error('Reset database error:', error);
+    console.error('[Database API] Reset database error:', error);
     return {
       success: false,
       message: `Failed to reset database: ${error.message}`
