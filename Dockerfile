@@ -24,7 +24,7 @@ RUN npx prisma generate
 # Copy rest of the source code
 COPY . .
 ENV NODE_ENV=production
-ENV DATABASE_URL="file:/app/prisma/dev.db"
+ENV DATABASE_URL="file:./prisma/dev.db"
 
 # Initialize and build
 RUN npm run build
