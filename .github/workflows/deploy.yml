@@ -34,15 +34,6 @@ jobs:
         run: |
           # Create external database directory if not exists
           sudo mkdir -p /home/ubuntu/ai-test-management-db
-          
-          # Copy database files if they don't exist
-          if [ -f prisma/prisma/dev.db ]; then
-            echo "Copying existing database..."
-            cp --update=none prisma/prisma/dev.db /home/ubuntu/ai-test-management-db/dev.db
-          else
-            echo "No existing database found, will create new one"
-          fi
-
           sudo chmod -R 777 /home/ubuntu/ai-test-management-db
 
       - name: Pull latest images
