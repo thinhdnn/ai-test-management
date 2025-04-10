@@ -35,6 +35,8 @@ RUN mkdir -p /app/playwright-projects/default && \
     cd /app/playwright-projects/default && \
     npx create-playwright@latest --quiet --install-deps
 
+RUN rm -rf /app/prisma/dev.db
+
 # Set entrypoint and expose port
 ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
