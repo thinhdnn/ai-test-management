@@ -19,9 +19,10 @@ jobs:
 
       - name: Ensure database file permissions
         run: |
-          mkdir -p ../../ai-test-management-db
-          touch ../../ai-test-management-db/dev.db
-          chmod 666 ../../ai-test-management-db/dev.db
+          sudo mkdir -p ../../ai-test-management-db
+          sudo touch ../../ai-test-management-db/dev.db
+          sudo chmod 666 ../../ai-test-management-db/dev.db
+          sudo chown $(whoami):$(whoami) ../../ai-test-management-db/dev.db
 
       - name: Backup database from container (if exists)
         run: |
