@@ -20,6 +20,8 @@ COPY . .
 ENV NODE_ENV=production
 ENV DATABASE_URL="file:./prisma/dev.db"
 
+RUN npm run prisma:generate
+
 # Initialize and build
 RUN npm run build
 
