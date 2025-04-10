@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -13,5 +11,5 @@ services:
       - DATABASE_API_KEY=playwright-gemini-secret-key-change-in-production
       - DATABASE_URL=file:./prisma/dev.db
     volumes:
-      - /home/ubuntu/ai-test-management-db/dev.db:/app/prisma/dev.db
-      - /home/ubuntu/ai-test-management-playwright-projects:/app/playwright-projects
+      - ../../ai-test-management-db/dev.db:/app/prisma/dev.db
+      - ../../ai-test-management-playwright-projects:/app/playwright-projects
