@@ -15,12 +15,6 @@ RUN apt-get update && \
 COPY package*.json ./
 RUN npm install
 
-# Copy Prisma files separately to make sure prisma directory is complete
-COPY prisma ./prisma/
-
-# Generate Prisma client
-RUN npx prisma generate
-
 # Copy rest of the source code
 COPY . .
 ENV NODE_ENV=production
