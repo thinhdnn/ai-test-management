@@ -20,7 +20,6 @@ jobs:
       - name: Stop and remove existing containers
         run: |
           docker-compose down || true
-          docker rmi $(docker images -q 'ai-test-management*') || true
 
       - name: Start application
         run: |
