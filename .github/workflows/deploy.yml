@@ -17,14 +17,23 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Stop and remove existing containers
+      - name: Ensure database file permissions
+        run: |
+          mkdir -p ../../ai-test-management-db
+          touch ../../ai-test-management-db/dev.db
+          chmod 666 ../../ai-test-management-db/dev.db
+
+      - name: Backup database from container (if exists)
+        run: |
+          docker cp $(docker-compose ps -q app):/app/prisma/dev.db ../../ai-test-management-db/dev.db || true
+
+      - name: Stop existing containers
         run: |
           docker-compose down || true
 
       - name: Start application
         run: |
-          docker-compose up -d
-          # Wait for container to be running
+          docker-compose up -d --build
           timeout=100
           until docker-compose ps | grep -q "Up" || [ $timeout -eq 0 ]; do
             echo "Waiting for container to start..."
@@ -44,7 +53,6 @@ jobs:
             echo "Waiting for application to be ready..."
             sleep 5
             timeout=$((timeout-5))
-            # Show container logs if application is not responding
             if [ $((timeout % 30)) -eq 0 ]; then
               docker-compose logs
             fi
@@ -55,3 +63,7 @@ jobs:
             exit 1
           fi
           echo "Application is ready!"
+
+      - name: Sync database to host
+        run: |
+          docker cp $(docker-compose ps -q app):/app/prisma/dev.db ../../ai-test-management-db/dev.db
