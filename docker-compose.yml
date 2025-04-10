@@ -11,6 +11,7 @@ services:
       - NODE_ENV=production
       - NEXT_PUBLIC_DATABASE_API_KEY=playwright-gemini-secret-key-change-in-production
       - DATABASE_API_KEY=playwright-gemini-secret-key-change-in-production
+      - DATABASE_URL=file:./prisma/prisma/dev.db
     volumes:
       - /home/ubuntu/ai-test-management-db/dev.db:/app/prisma/dev.db
       - /home/ubuntu/ai-test-management-playwright-projects:/app/playwright-projects
