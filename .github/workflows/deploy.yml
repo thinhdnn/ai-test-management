@@ -11,11 +11,6 @@ jobs:
   build-and-deploy:
     runs-on: self-hosted
     steps:
-      - name: Clean workspace
-        run: |
-          # Remove everything except prisma directory
-          find . -mindepth 1 -maxdepth 1 ! -name 'prisma' -exec rm -rf {} +
-
       - name: Checkout code
         uses: actions/checkout@v4
 
@@ -25,20 +20,7 @@ jobs:
       - name: Stop and remove existing containers
         run: |
           docker-compose down || true
-          # Remove all unused images
-          docker image prune -f
-          # Remove specific images if they exist
           docker rmi $(docker images -q 'ai-test-management*') || true
-
-      - name: Copy database
-        run: |
-          # Create external database directory if not exists
-          sudo mkdir -p /home/ubuntu/ai-test-management-db
-          sudo chmod -R 777 /home/ubuntu/ai-test-management-db
-
-      - name: Pull latest images
-        run: |
-          docker-compose pull
 
       - name: Start application
         run: |
