@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -25,26 +25,63 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-const userFormSchema = z.object({
-  username: z.string().min(3, {
-    message: "Username must be at least 3 characters",
-  }),
-  password: z.string().min(6, {
-    message: "Password must be at least 6 characters",
-  }),
-  role: z.enum(["user", "admin"]),
-});
+// Define Role type
+interface Role {
+  id: string;
+  name: string;
+  description?: string;
+}
 
-type UserFormValues = z.infer<typeof userFormSchema>;
+// Dynamic schema that will be updated with available roles
+const createUserFormSchema = (roles: Role[]) => {
+  return z.object({
+    username: z.string().min(3, {
+      message: "Username must be at least 3 characters",
+    }),
+    password: z.string().min(6, {
+      message: "Password must be at least 6 characters",
+    }),
+    roleId: z.string(),
+  });
+};
 
-export function UserForm({ user }: { user?: UserFormValues }) {
+type UserFormValues = z.infer<ReturnType<typeof createUserFormSchema>>;
+
+export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [isLoadingRoles, setIsLoadingRoles] = useState(true);
+
+  // Fetch available roles
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const response = await fetch('/api/settings/rbac/roles');
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch roles');
+        }
+        
+        const rolesData = await response.json();
+        setRoles(rolesData);
+      } catch (error) {
+        console.error('Error fetching roles:', error);
+        toast.error('Failed to load roles');
+      } finally {
+        setIsLoadingRoles(false);
+      }
+    };
+
+    fetchRoles();
+  }, []);
+
+  const userFormSchema = createUserFormSchema(roles);
 
   const defaultValues: Partial<UserFormValues> = {
     username: user?.username || "",
     password: user?.password || "",
-    role: user?.role || "user",
+    roleId: user?.roleId || "none",
   };
 
   const form = useForm<UserFormValues>({
@@ -55,17 +92,53 @@ export function UserForm({ user }: { user?: UserFormValues }) {
   async function onSubmit(data: UserFormValues) {
     try {
       setLoading(true);
+      
+      // Determine the basic role based on RBAC role or default to "user"
+      const selectedRole = roles.find(r => r.id === data.roleId);
+      const basicRole = (selectedRole?.name === "Admin") ? "admin" : "user";
+      
+      // Prepare data for API
+      const userData = {
+        username: data.username,
+        password: data.password,
+        role: basicRole,
+        createdBy: "system", // Could be updated to the current user
+      };
+      
+      // Create user
       const response = await fetch("/api/users", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(data),
+        body: JSON.stringify(userData),
       });
 
       if (!response.ok) {
         const error = await response.json();
         throw new Error(error.message || "Failed to create user");
+      }
+      
+      const createdUser = await response.json();
+      
+      // If a role was selected (not "none"), assign it using RBAC
+      if (data.roleId && data.roleId !== "none") {
+        try {
+          const rbacResponse = await fetch(`/api/settings/rbac/users/${createdUser.id}/roles`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ roleId: data.roleId }),
+          });
+          
+          if (!rbacResponse.ok) {
+            // Don't fail the whole operation if role assignment fails
+            console.error("Failed to assign RBAC role");
+          }
+        } catch (error) {
+          console.error("Error assigning RBAC role:", error);
+        }
       }
 
       toast.success("User created successfully");
@@ -76,6 +149,10 @@ export function UserForm({ user }: { user?: UserFormValues }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (isLoadingRoles) {
+    return <div className="flex justify-center py-4">Loading roles...</div>;
   }
 
   return (
@@ -113,19 +190,26 @@ export function UserForm({ user }: { user?: UserFormValues }) {
         />
         <FormField
           control={form.control}
-          name="role"
+          name="roleId"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Role</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <Select 
+                onValueChange={field.onChange} 
+                defaultValue={field.value || "none"}
+              >
                 <FormControl>
                   <SelectTrigger>
                     <SelectValue placeholder="Select role" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="user">User</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
+                  <SelectItem value="none">None</SelectItem>
+                  {roles.map((role) => (
+                    <SelectItem key={role.id} value={role.id}>
+                      {role.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
               <FormMessage />

@@ -32,13 +32,13 @@ export default function AISettingsPage() {
         }
         
         const settingsData = await response.json();
-        
-        // Convert array to object for easier access
-        const settings: Record<string, string> = {};
+
+  // Convert array to object for easier access
+  const settings: Record<string, string> = {};
         settingsData.forEach((setting: { key: string; value: string }) => {
-          settings[setting.key] = setting.value;
-        });
-        
+    settings[setting.key] = setting.value;
+  });
+
         setFormData(settings);
         setActiveAiProvider(settings.ai_provider || "gemini");
       } catch (error) {

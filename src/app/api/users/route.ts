@@ -5,7 +5,7 @@ import * as bcrypt from "bcrypt";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, password, role } = body;
+    const { username, password, role, createdBy = "system" } = body;
 
     // Validate input
     if (!username || !password) {
@@ -36,6 +36,7 @@ export async function POST(req: NextRequest) {
         username,
         password: hashedPassword,
         role: role || "user",
+        createdBy: createdBy,
       },
     });
 
@@ -64,8 +65,7 @@ export async function GET() {
         role: true,
         createdAt: true,
         updatedAt: true,
-        created_by: true,
-        updated_by: true,
+        createdBy: true,
       },
     });
 

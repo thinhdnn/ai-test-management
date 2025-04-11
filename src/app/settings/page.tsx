@@ -6,8 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function SettingsPage() {
   const [formData, setFormData] = useState<Record<string, string>>({});
@@ -89,99 +87,29 @@ export default function SettingsPage() {
 
   return (
     <div className="container mx-auto p-4">
-      <Tabs defaultValue="general" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="ai">AI Settings</TabsTrigger>
-          <TabsTrigger value="rbac">RBAC Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="general">
-          <Card>
-            <CardHeader>
-              <CardTitle>General Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="siteName">Site Name</Label>
-                <Input
-                  id="siteName"
-                  value={formData.siteName || ''}
-                  onChange={(e) => handleInputChange('siteName', e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="siteDescription">Site Description</Label>
-                <Input
-                  id="siteDescription"
-                  value={formData.siteDescription || ''}
-                  onChange={(e) => handleInputChange('siteDescription', e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="ai">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="aiProvider">AI Provider</Label>
-                <Select
-                  value={formData.aiProvider || ''}
-                  onValueChange={(value) => handleInputChange('aiProvider', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select AI Provider" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="openai">OpenAI</SelectItem>
-                    <SelectItem value="gemini">Google Gemini</SelectItem>
-                    <SelectItem value="claude">Anthropic Claude</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="apiKey">API Key</Label>
-                <Input
-                  id="apiKey"
-                  type="password"
-                  value={formData.apiKey || ''}
-                  onChange={(e) => handleInputChange('apiKey', e.target.value)}
-                />
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="rbac">
-          <Card>
-            <CardHeader>
-              <CardTitle>RBAC Settings</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="defaultRole">Default Role</Label>
-                <Select
-                  value={formData.defaultRole || ''}
-                  onValueChange={(value) => handleInputChange('defaultRole', value)}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select Default Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="user">User</SelectItem>
-                    <SelectItem value="admin">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+      <Card>
+        <CardHeader>
+          <CardTitle>General Settings</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="siteName">Site Name</Label>
+            <Input
+              id="siteName"
+              value={formData.siteName || ''}
+              onChange={(e) => handleInputChange('siteName', e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="siteDescription">Site Description</Label>
+            <Input
+              id="siteDescription"
+              value={formData.siteDescription || ''}
+              onChange={(e) => handleInputChange('siteDescription', e.target.value)}
+            />
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="mt-4">
         <Button onClick={handleSubmit} disabled={isLoading}>

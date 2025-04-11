@@ -1,25 +1,24 @@
+'use client';
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { columns } from "@/components/users/columns";
 import { DataTable } from "@/components/ui/data-table";
 import { User } from "@prisma/client";
+import { useState, useEffect } from "react";
 
-// Fetch users from API
-async function getUsers() {
-  const response = await fetch(`/api/users`, {
-    cache: 'no-store'
-  });
+export default function UsersPage() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
   
-  if (!response.ok) {
-    throw new Error('Failed to fetch users');
-  }
-  
-  return response.json();
-}
-
-export default async function UsersPage() {
-  const users = await getUsers();
+  useEffect(() => {
+    async function fetchUsers() {
+      const data = await fetch('/api/users').then(res => res.json());
+      setUsers(data);
+      setLoading(false);
+    }
+    fetchUsers();
+  }, []);
 
   return (
     <div className="container px-4 py-6 sm:px-6 md:px-8">

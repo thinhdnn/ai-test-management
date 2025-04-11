@@ -90,6 +90,7 @@ export default function RBACPage() {
   const [permissions, setPermissions] = useState<Permission[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [viewMode, setViewMode] = useState<'list' | 'matrix'>('list');
+  const [error, setError] = useState<string | null>(null);
 
   // Dialog state
   const [isRoleDialogOpen, setIsRoleDialogOpen] = useState(false);
@@ -115,7 +116,7 @@ export default function RBACPage() {
 
   // Fetch initial data
   useEffect(() => {
-    const fetchData = async () => {
+    async function fetchData() {
       try {
         const [rolesResponse, permissionsResponse, usersResponse] = await Promise.all([
           fetch('/api/settings/rbac/roles', { cache: 'no-store' }),
@@ -145,11 +146,12 @@ export default function RBACPage() {
         setRolePermissions(mappings);
       } catch (error) {
         console.error('Error fetching RBAC data:', error);
+        setError(error instanceof Error ? error.message : 'Failed to load RBAC data');
         toast.error('Failed to load RBAC data');
       } finally {
         setIsLoading(false);
       }
-    };
+    }
 
     fetchData();
   }, []);
@@ -386,6 +388,16 @@ export default function RBACPage() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="container px-4 py-6 sm:px-6 md:px-8">
+        <div className="flex items-center justify-center h-[50vh]">
+          <div className="text-red-500">Error: {error}</div>
+        </div>
       </div>
     );
   }
