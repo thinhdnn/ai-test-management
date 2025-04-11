@@ -12,5 +12,5 @@ services:
       - DATABASE_URL=file:./prisma/dev.db
       - NEXT_PUBLIC_SKIP_DB_CHECKS=false
     volumes:
-      - ../ai-test-management-db/dev.db:/app/prisma/dev.db
+      - ../ai-test-management-db/dev.db:/app/prisma/prisma/dev.db
       - ../ai-test-management-playwright-projects:/app/playwright-projects
