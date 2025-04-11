@@ -24,6 +24,7 @@ jobs:
 
       - name: Start application
         run: |
+          docker system prune -a -f
           docker-compose up -d --build
           timeout=100
           until docker-compose ps | grep -q "Up" || [ $timeout -eq 0 ]; do
