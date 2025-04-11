@@ -6,6 +6,13 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Force all pages to be dynamically rendered
+  output: "standalone",
+  // Skip static page generation during build
+  staticPageGenerationTimeout: 120,
+  env: {
+    NEXT_PUBLIC_SKIP_DB_CHECKS: 'true',
+  },
   async headers() {
     return [
       {

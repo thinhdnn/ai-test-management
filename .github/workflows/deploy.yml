@@ -39,7 +39,7 @@ jobs:
 
       - name: Sync database to host
         run: |
-          docker cp $(docker-compose ps -q app):/app/prisma/dev.db ../../ai-test-management-db/dev.db || true
+          docker cp $(docker-compose ps -q app):/app/prisma/prisma/dev.db ../../ai-test-management-db/dev.db || true
           chmod 666 ../../ai-test-management-db/dev.db || true
 
       - name: Wait for application to be ready
