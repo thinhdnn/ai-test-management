@@ -42,4 +42,4 @@ RUN chmod -R 755 /app/.next && \
 # Set entrypoint and expose port
 ENTRYPOINT ["/usr/bin/tini", "--"]
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", ".next/standalone/server.js"]

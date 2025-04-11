@@ -53,16 +53,16 @@ reset_database() {
     echo "Generating Prisma client..."
     npx prisma generate
     
-    # Seed the database
-    echo "Seeding the database with initial data..."
-    npm run prisma:seed
-    
-    # Seed permissions and roles
+    # Seed permissions and roles first
     echo "Seeding permissions..."
     node prisma/seed-permissions.js
     
     echo "Seeding roles..."
     node prisma/seed-roles.js
+    
+    # Then seed users and other data
+    echo "Seeding the database with initial data..."
+    npm run prisma:seed
     
     echo "Database reset complete!"
     echo "You can now log in with:"

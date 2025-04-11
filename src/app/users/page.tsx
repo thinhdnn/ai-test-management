@@ -1,20 +1,21 @@
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
-import { prisma } from "@/lib/db";
 import { columns } from "@/components/users/columns";
 import { DataTable } from "@/components/ui/data-table";
 import { User } from "@prisma/client";
 
-// Fetch users from database
+// Fetch users from API
 async function getUsers() {
-  const users = await prisma.user.findMany({
-    orderBy: {
-      createdAt: "desc",
-    },
+  const response = await fetch(`/api/users`, {
+    cache: 'no-store'
   });
-
-  return users;
+  
+  if (!response.ok) {
+    throw new Error('Failed to fetch users');
+  }
+  
+  return response.json();
 }
 
 export default async function UsersPage() {
