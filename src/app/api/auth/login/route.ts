@@ -42,6 +42,15 @@ export async function POST(request: Request) {
       );
     }
 
+    // Check if user is active
+    if (!user.isActive) {
+      console.log(`[API] Login failed: User account is disabled - ${username}`);
+      return NextResponse.json(
+        { message: "Your account has been disabled. Please contact an administrator." },
+        { status: 403 }
+      );
+    }
+
     console.log(`[API] Login successful for ${username}`);
 
     // Create JWT token

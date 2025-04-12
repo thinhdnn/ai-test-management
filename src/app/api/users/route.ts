@@ -37,6 +37,7 @@ export async function POST(req: NextRequest) {
         password: hashedPassword,
         role: role || "user",
         createdBy: createdBy,
+        isActive: true,
       },
     });
 
@@ -63,6 +64,7 @@ export async function GET() {
         id: true,
         username: true,
         role: true,
+        isActive: true,
         createdAt: true,
         updatedAt: true,
         createdBy: true,
