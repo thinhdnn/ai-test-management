@@ -103,6 +103,11 @@ export const columns: ColumnDef<User>[] = [
                 Edit
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href={`/users/${user.id}/change-password`} className="w-full">
+                Change Password
+              </Link>
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       );
