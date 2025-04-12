@@ -5,20 +5,44 @@ import { formatDate } from "@/lib/utils";
 import { columns } from "@/components/users/columns";
 import { DataTable } from "@/components/ui/data-table";
 import { User } from "@prisma/client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 export default function UsersPage() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
   
-  useEffect(() => {
-    async function fetchUsers() {
+  const fetchUsers = useCallback(async () => {
+    try {
+      setLoading(true);
       const data = await fetch('/api/users').then(res => res.json());
       setUsers(data);
+    } catch (error) {
+      console.error("Error fetching users:", error);
+    } finally {
       setLoading(false);
     }
-    fetchUsers();
   }, []);
+  
+  // Function to refresh user data
+  const refreshUsers = useCallback(() => {
+    setRefreshTrigger(prev => prev + 1);
+  }, []);
+  
+  useEffect(() => {
+    fetchUsers();
+  }, [fetchUsers, refreshTrigger]);
+
+  // Expose the refresh function to the window object for components to access
+  useEffect(() => {
+    // @ts-ignore
+    window.refreshUserTable = refreshUsers;
+    
+    return () => {
+      // @ts-ignore
+      delete window.refreshUserTable;
+    };
+  }, [refreshUsers]);
 
   return (
     <div className="container px-4 py-6 sm:px-6 md:px-8">
@@ -29,7 +53,7 @@ export default function UsersPage() {
         </Button>
       </div>
 
-      {users.length === 0 ? (
+      {users.length === 0 && !loading ? (
         <div className="text-center p-10 border rounded-md">
           <p className="text-muted-foreground">
             No users found. Create your first user to get started.

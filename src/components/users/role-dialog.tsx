@@ -154,6 +154,9 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
         throw new Error(error.message || "Failed to update user role");
       }
       
+      // Update the role in the current row data
+      user.role = basicRole;
+      
       // Step 3: Assign the RBAC role to the user
       const rbacResponse = await fetch(`/api/settings/rbac/users/${user.id}/roles`, {
         method: "POST",
@@ -170,6 +173,17 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
       toast.success(`Role updated successfully to ${selectedRole.name}`);
       onOpenChange(false);
       if (onRoleChange) onRoleChange();
+      else {
+        // Gọi hàm làm mới từ đối tượng window
+        // @ts-ignore
+        if (typeof window.refreshUserTable === 'function') {
+          // @ts-ignore
+          window.refreshUserTable();
+        } else {
+          // Nếu không có hàm làm mới, tải lại trang
+          window.location.reload();
+        }
+      }
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {

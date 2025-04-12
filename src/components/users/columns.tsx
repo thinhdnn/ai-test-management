@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Check, X, Mail } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Check, X, Mail, Shield, User as UserIcon } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -68,15 +68,23 @@ export const columns: ColumnDef<User>[] = [
         </Button>
       );
     },
-    cell: ({ row }) => (
-      <div
-        className={
-          row.getValue("role") === "admin" ? "text-blue-600 font-medium" : ""
-        }
-      >
-        {row.getValue("role")}
-      </div>
-    ),
+    cell: ({ row }) => {
+      const role = row.getValue("role") as string;
+      return (
+        <div
+          className={
+            role === "admin" ? "text-blue-600 font-medium flex items-center" : "flex items-center"
+          }
+        >
+          {role === "admin" ? (
+            <Shield className="h-4 w-4 mr-2 text-blue-600" />
+          ) : (
+            <UserIcon className="h-4 w-4 mr-2 text-gray-500" />
+          )}
+          {role}
+        </div>
+      );
+    },
   },
   {
     accessorKey: "isActive",
@@ -172,7 +180,16 @@ export const columns: ColumnDef<User>[] = [
             user={user} 
             open={showRoleDialog} 
             onOpenChange={setShowRoleDialog}
-            onRoleChange={() => window.location.reload()}
+            onRoleChange={() => {
+              // Sử dụng hàm làm mới từ cửa sổ toàn cục
+              // @ts-ignore
+              if (typeof window.refreshUserTable === 'function') {
+                // @ts-ignore
+                window.refreshUserTable();
+              } else {
+                window.location.reload();
+              }
+            }}
           />
           
           <DropdownMenu>
