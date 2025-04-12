@@ -5,7 +5,7 @@ import * as bcrypt from "bcrypt";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, email, password, role, createdBy = "system" } = body;
+    const { username, email, password, createdBy = "system" } = body;
 
     // Validate input
     if (!username || !password) {
@@ -36,7 +36,6 @@ export async function POST(req: NextRequest) {
         username,
         email,
         password: hashedPassword,
-        role: role || "user",
         createdBy: createdBy,
         isActive: true,
       },
@@ -65,14 +64,19 @@ export async function GET() {
         id: true,
         username: true,
         email: true,
-        role: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
         createdBy: true,
+        roles: {
+          include: {
+            role: true
+          }
+        }
       },
     });
 
+    // Không cần tạo role ảo nữa, trả về dữ liệu thô RBAC thực tế
     return NextResponse.json(users);
   } catch (error) {
     console.error("Error fetching users:", error);

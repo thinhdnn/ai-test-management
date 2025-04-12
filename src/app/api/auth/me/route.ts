@@ -38,7 +38,11 @@ export async function GET(request: Request) {
       select: {
         id: true,
         username: true,
-        role: true,
+        roles: {
+          include: {
+            role: true
+          }
+        }
       },
     });
 
@@ -52,13 +56,22 @@ export async function GET(request: Request) {
       );
     }
 
-    console.log(
-      `[API/auth/me] Successfully authenticated user: ${user.username}`
+    // Lấy thông tin vai trò RBAC thực tế
+    const userRoles = user.roles.map(ur => ur.role.name);
+    const isAdmin = userRoles.some(roleName => 
+      roleName.toLowerCase() === "administrator"
     );
 
-    // Return user information
+    console.log(
+      `[API/auth/me] Successfully authenticated user: ${user.username} with roles: ${userRoles.join(', ')}`
+    );
+
+    // Return user information with actual roles from RBAC
     return NextResponse.json({
-      ...user,
+      id: user.id,
+      username: user.username,
+      roles: userRoles,
+      isAdmin: isAdmin,
       token, // Include token in response for client-side storage
     });
   } catch (error) {

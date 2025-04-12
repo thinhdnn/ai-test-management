@@ -4,11 +4,30 @@ import { Button } from "@/components/ui/button";
 import { formatDate } from "@/lib/utils";
 import { columns } from "@/components/users/columns";
 import { DataTable } from "@/components/ui/data-table";
-import { User } from "@prisma/client";
+import { User as PrismaUser } from "@prisma/client";
 import { useState, useEffect, useCallback } from "react";
 
+// Extend User type to include virtual fields from API
+type User = Omit<PrismaUser, 'role'> & {
+  // Legacy field, có thể có hoặc không
+  role?: string;
+  // Thông tin roles từ RBAC
+  roles?: { 
+    id: string;
+    userId: string;
+    roleId: string;
+    role: {
+      id: string;
+      name: string;
+      description?: string;
+    }
+  }[];
+  // Trường mới theo chuẩn RBAC
+  isAdmin?: boolean;
+}
+
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
+  const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   
@@ -51,7 +70,7 @@ export default function UsersPage() {
         <Button asChild>
           <Link href="/users/new">Add User</Link>
         </Button>
-      </div>
+      </div> 
 
       {users.length === 0 && !loading ? (
         <div className="text-center p-10 border rounded-md">
@@ -62,7 +81,7 @@ export default function UsersPage() {
       ) : (
         <DataTable
           columns={columns}
-          data={users as User[]}
+          data={users}
           searchKey="username"
           searchPlaceholder="Search users..."
         />

@@ -12,12 +12,32 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
-import { User } from "@prisma/client";
+import { User as PrismaUser } from "@prisma/client";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RoleDialog } from "./role-dialog";
+
+// Extend User type to include virtual fields from API
+// Sử dụng type thay vì interface để tránh lỗi extends
+type User = Omit<PrismaUser, 'role'> & {
+  // Legacy field, có thể có hoặc không
+  role?: string;
+  // Thông tin roles từ RBAC
+  roles?: { 
+    id: string;
+    userId: string;
+    roleId: string;
+    role: {
+      id: string;
+      name: string;
+      description?: string;
+    }
+  }[];
+  // Trường mới theo chuẩn RBAC
+  isAdmin?: boolean;
+}
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -56,7 +76,7 @@ export const columns: ColumnDef<User>[] = [
     ),
   },
   {
-    accessorKey: "role",
+    id: "role",
     header: ({ column }) => {
       return (
         <Button
@@ -69,19 +89,50 @@ export const columns: ColumnDef<User>[] = [
       );
     },
     cell: ({ row }) => {
-      const role = row.getValue("role") as string;
+      const user = row.original;
+      
+      // Kiểm tra isAdmin từ API mới
+      let isAdmin = user.isAdmin;
+      let roleName = "";
+      
+      // Nếu không có isAdmin, kiểm tra từ roles
+      if (isAdmin === undefined && user.roles && user.roles.length > 0) {
+        // Kiểm tra xem có vai trò Administrator không
+        isAdmin = user.roles.some(r => 
+          r.role.name.toLowerCase() === "administrator"
+        );
+        
+        // Lấy tên vai trò đầu tiên nếu không phải admin
+        if (!isAdmin && user.roles.length > 0) {
+          roleName = user.roles[0].role.name;
+        }
+      } 
+      // Legacy: Nếu không có roles, kiểm tra field role
+      else if (isAdmin === undefined && user.role) {
+        isAdmin = user.role === "admin";
+      }
+      
+      // Nếu là admin, hiển thị "Administrator"
+      if (isAdmin) {
+        roleName = "Administrator";
+      } 
+      // Nếu chưa có roleName, lấy từ legacy hoặc fallback
+      else if (!roleName) {
+        roleName = user.role || "User";
+      }
+      
       return (
         <div
           className={
-            role === "admin" ? "text-blue-600 font-medium flex items-center" : "flex items-center"
+            isAdmin ? "text-blue-600 font-medium flex items-center" : "flex items-center"
           }
         >
-          {role === "admin" ? (
+          {isAdmin ? (
             <Shield className="h-4 w-4 mr-2 text-blue-600" />
           ) : (
             <UserIcon className="h-4 w-4 mr-2 text-gray-500" />
           )}
-          {role}
+          {roleName}
         </div>
       );
     },

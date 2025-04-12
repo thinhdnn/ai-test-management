@@ -45,6 +45,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 // Define types for the data
 interface Permission {
@@ -113,6 +120,12 @@ export default function RBACPage() {
 
   // Role-permission mapping for the matrix
   const [rolePermissions, setRolePermissions] = useState<Record<string, string[]>>({});
+
+  // User dialog state
+  const [isEditUserDialogOpen, setIsEditUserDialogOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+  const [selectedUserRoles, setSelectedUserRoles] = useState<string[]>([]);
+  const [isUpdatingUserRoles, setIsUpdatingUserRoles] = useState(false);
 
   // Fetch initial data
   useEffect(() => {
@@ -382,6 +395,62 @@ export default function RBACPage() {
     } finally {
       setIsAddingPermission(false);
     }
+  };
+
+  // Handle opening the edit user dialog
+  const handleEditUserClick = (user: User) => {
+    setEditingUser(user);
+    setSelectedUserRoles(user.roles.map(r => r.roleId));
+    setIsEditUserDialogOpen(true);
+  };
+
+  // Handle user roles update
+  const handleUpdateUserRoles = async () => {
+    if (!editingUser) return;
+    
+    try {
+      setIsUpdatingUserRoles(true);
+      
+      const response = await fetch(`/api/settings/rbac/users/${editingUser.id}/roles`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ roleIds: selectedUserRoles }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update user roles');
+      }
+      
+      const updatedUser = await response.json();
+      
+      // Update the users array with the updated user
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user.id === updatedUser.id ? updatedUser : user
+        )
+      );
+      
+      setIsEditUserDialogOpen(false);
+      toast.success('User roles updated successfully');
+    } catch (error) {
+      console.error('Error updating user roles:', error);
+      toast.error('Could not update user roles. Please try again.');
+    } finally {
+      setIsUpdatingUserRoles(false);
+    }
+  };
+
+  // Handle roles toggle for a user
+  const toggleUserRole = (roleId: string) => {
+    setSelectedUserRoles(prev => {
+      if (prev.includes(roleId)) {
+        return prev.filter(id => id !== roleId);
+      } else {
+        return [...prev, roleId];
+      }
+    });
   };
 
   if (isLoading) {
@@ -807,7 +876,11 @@ export default function RBACPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Button variant="ghost" size="icon">
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          onClick={() => handleEditUserClick(user)}
+                        >
                           <Edit className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -827,6 +900,53 @@ export default function RBACPage() {
           />
         </CardFooter>
       </Card>
+
+      {/* Edit User Roles Dialog */}
+      <Dialog open={isEditUserDialogOpen} onOpenChange={setIsEditUserDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User Roles</DialogTitle>
+            <DialogDescription>
+              Assign roles to {editingUser?.username}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              {roles.map(role => (
+                <div key={role.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`role-${role.id}`}
+                    checked={selectedUserRoles.includes(role.id)}
+                    onCheckedChange={() => toggleUserRole(role.id)}
+                  />
+                  <Label htmlFor={`role-${role.id}`} className="flex flex-col">
+                    <span>{role.name}</span>
+                    {role.description && (
+                      <span className="text-sm text-muted-foreground">
+                        {role.description}
+                      </span>
+                    )}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setIsEditUserDialogOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleUpdateUserRoles} 
+              disabled={isUpdatingUserRoles}
+            >
+              {isUpdatingUserRoles ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

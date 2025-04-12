@@ -97,16 +97,11 @@ export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
     try {
       setLoading(true);
       
-      // Determine the basic role based on RBAC role or default to "user"
-      const selectedRole = roles.find(r => r.id === data.roleId);
-      const basicRole = (selectedRole?.name === "Admin") ? "admin" : "user";
-      
       // Prepare data for API
       const userData = {
         username: data.username,
         email: data.email,
         password: data.password,
-        role: basicRole,
         createdBy: "system", // Could be updated to the current user
       };
       
@@ -138,11 +133,11 @@ export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
           });
           
           if (!rbacResponse.ok) {
-            // Don't fail the whole operation if role assignment fails
-            console.error("Failed to assign RBAC role");
+            toast.warning("User created but role assignment failed");
           }
         } catch (error) {
           console.error("Error assigning RBAC role:", error);
+          toast.warning("User created but role assignment failed");
         }
       }
 

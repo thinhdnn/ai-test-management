@@ -41,10 +41,14 @@ export async function PATCH(
         id: true,
         username: true,
         email: true,
-        role: true,
         isActive: true,
         createdAt: true,
-        updatedAt: true
+        updatedAt: true,
+        roles: {
+          include: {
+            role: true
+          }
+        }
       }
     });
 

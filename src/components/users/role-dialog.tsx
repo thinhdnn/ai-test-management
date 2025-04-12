@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
-import { User } from "@prisma/client";
+import { User as PrismaUser } from "@prisma/client";
 
 import {
   Dialog,
@@ -40,6 +40,25 @@ interface Role {
   id: string;
   name: string;
   description?: string;
+}
+
+// Extend User type to include virtual fields from API
+type User = Omit<PrismaUser, 'role'> & {
+  // Legacy field, có thể có hoặc không
+  role?: string;
+  // Thông tin roles từ RBAC
+  roles?: { 
+    id: string;
+    userId: string;
+    roleId: string;
+    role: {
+      id: string;
+      name: string;
+      description?: string;
+    }
+  }[];
+  // Trường mới theo chuẩn RBAC
+  isAdmin?: boolean;
 }
 
 // Dynamic schema that will be updated with available roles
@@ -131,33 +150,14 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
         return;
       }
       
-      // Step 1: Determine basic role (admin/user) based on selected RBAC role
+      // Find the selected role
       const selectedRole = roles.find(r => r.id === data.roleId);
       if (!selectedRole) {
         toast.error("Selected role not found");
         return;
       }
       
-      const basicRole = (selectedRole.name.toLowerCase() === "admin") ? "admin" : "user";
-      
-      // Step 2: Update the basic role in the user model
-      const userRoleResponse = await fetch(`/api/users/${user.id}/role`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role: basicRole }),
-      });
-
-      if (!userRoleResponse.ok) {
-        const error = await userRoleResponse.json();
-        throw new Error(error.message || "Failed to update user role");
-      }
-      
-      // Update the role in the current row data
-      user.role = basicRole;
-      
-      // Step 3: Assign the RBAC role to the user
+      // Gán RBAC role cho người dùng
       const rbacResponse = await fetch(`/api/settings/rbac/users/${user.id}/roles`, {
         method: "POST",
         headers: {
@@ -167,7 +167,7 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
       });
       
       if (!rbacResponse.ok) {
-        toast.error("Role updated but permission assignment failed");
+        throw new Error("Failed to assign role");
       }
       
       toast.success(`Role updated successfully to ${selectedRole.name}`);

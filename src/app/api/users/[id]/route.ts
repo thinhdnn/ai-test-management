@@ -15,11 +15,15 @@ export async function GET(
         id: true,
         username: true,
         email: true,
-        role: true,
         isActive: true,
         createdAt: true,
         updatedAt: true,
         createdBy: true,
+        roles: {
+          include: {
+            role: true
+          }
+        }
       },
     });
 

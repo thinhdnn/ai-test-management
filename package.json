@@ -10,9 +10,8 @@
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
     "prisma:seed": "ts-node prisma/seed.ts",
-    "prisma:seed-users": "node prisma/seed-users.js",
-    "prisma:seed-permissions": "node prisma/seed-permissions.js",
-    "prisma:seed-roles": "node prisma/seed-roles.js"
+    "prisma:seed-users": "ts-node prisma/seed-users.ts",
+    "prisma:seed-roles": "ts-node prisma/seed-roles.ts"
   },
   "dependencies": {
     "@codemirror/lang-javascript": "^6.2.3",

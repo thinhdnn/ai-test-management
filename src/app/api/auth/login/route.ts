@@ -20,6 +20,13 @@ export async function POST(request: Request) {
     // Find user in database
     const user = await prisma.user.findUnique({
       where: { username },
+      include: {
+        roles: {
+          include: {
+            role: true
+          }
+        }
+      }
     });
 
     // Check if user doesn't exist
@@ -53,12 +60,19 @@ export async function POST(request: Request) {
 
     console.log(`[API] Login successful for ${username}`);
 
+    // Lấy thông tin vai trò RBAC thực tế
+    const userRoles = user.roles.map(ur => ur.role.name);
+    const isAdmin = userRoles.some(roleName => 
+      roleName.toLowerCase() === "administrator"
+    );
+
     // Create JWT token
     const token = sign(
       {
         id: user.id,
         username: user.username,
-        role: user.role,
+        roles: userRoles,
+        isAdmin: isAdmin
       },
       process.env.JWT_SECRET || "secret",
       { expiresIn: "1d" }
@@ -68,7 +82,8 @@ export async function POST(request: Request) {
     const response = NextResponse.json({
       id: user.id,
       username: user.username,
-      role: user.role,
+      roles: userRoles,
+      isAdmin: isAdmin,
       token: token, // Include token in response for client-side storage
     });
 

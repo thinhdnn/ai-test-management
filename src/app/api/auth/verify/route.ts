@@ -27,7 +27,11 @@ export async function POST(request: Request) {
       select: {
         id: true,
         username: true,
-        role: true,
+        roles: {
+          include: {
+            role: true
+          }
+        }
       },
     });
 
@@ -41,17 +45,24 @@ export async function POST(request: Request) {
       );
     }
 
-    console.log(
-      `[API/auth/verify] Successfully verified user: ${user.username}`
+    // Lấy thông tin vai trò RBAC thực tế
+    const userRoles = user.roles.map(ur => ur.role.name);
+    const isAdmin = userRoles.some(roleName => 
+      roleName.toLowerCase() === "administrator"
     );
 
-    // Return verification result
+    console.log(
+      `[API/auth/verify] Successfully verified user: ${user.username} with roles: ${userRoles.join(', ')}`
+    );
+
+    // Return verification result with actual roles from RBAC
     return NextResponse.json({
       valid: true,
       user: {
         id: user.id,
         username: user.username,
-        role: user.role,
+        roles: userRoles,
+        isAdmin: isAdmin
       },
     });
   } catch (error) {

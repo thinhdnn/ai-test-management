@@ -1,16 +1,31 @@
-const { PrismaClient } = require("@prisma/client");
+import { PrismaClient } from "@prisma/client";
 const prisma = new PrismaClient();
 
-async function main() {
+interface Role {
+  name: string;
+  description: string;
+}
+
+interface Permission {
+  name: string;
+  description: string;
+}
+
+async function main(): Promise<void> {
   console.log("Seeding default roles...");
 
   // Delete existing roles to avoid duplication
-  await prisma.rolePermission.deleteMany({});
-  await prisma.userRole.deleteMany({});
-  await prisma.role.deleteMany({});
+  try {
+    await prisma.rolePermission.deleteMany({});
+    await prisma.userRole.deleteMany({});
+    await prisma.role.deleteMany({});
+    console.log("Deleted existing roles, role permissions and user roles");
+  } catch (error) {
+    console.error("Error clearing existing data:", error);
+  }
 
   // Create 4 default roles
-  const roles = [
+  const roles: Role[] = [
     {
       name: "Administrator",
       description: "Full access to all system features",
@@ -37,12 +52,17 @@ async function main() {
     });
   }
 
+  // Check if we have permissions
+  const permissionsCount = await prisma.permission.count();
+  if (permissionsCount === 0) {
+    console.log("No permissions found. Creating default permissions...");
+    await createDefaultPermissions();
+  }
+
   // Get all permissions from the database
   const permissions = await prisma.permission.findMany();
   if (permissions.length === 0) {
-    console.log(
-      "No permissions found in the database. Please run seed-permissions.js first."
-    );
+    console.log("No permissions available to assign to roles");
     return;
   }
 
@@ -55,6 +75,11 @@ async function main() {
   });
   const tester = await prisma.role.findUnique({ where: { name: "Tester" } });
   const viewer = await prisma.role.findUnique({ where: { name: "Viewer" } });
+
+  if (!administrator || !projectManager || !tester || !viewer) {
+    console.error("One or more roles not found!");
+    return;
+  }
 
   // Assign permissions to Administrator (all permissions)
   console.log("Assigning permissions to Administrator role...");
@@ -120,6 +145,33 @@ async function main() {
   console.log("Role seeding completed!");
 }
 
+// Hàm tạo permissions mặc định nếu chưa có
+async function createDefaultPermissions(): Promise<void> {
+  const defaultPermissions: Permission[] = [
+    { name: "project.create", description: "Create new projects" },
+    { name: "project.read", description: "View projects" },
+    { name: "project.update", description: "Update project details" },
+    { name: "project.delete", description: "Delete projects" },
+    { name: "project.run", description: "Run project tests" },
+    { name: "testcase.create", description: "Create new test cases" },
+    { name: "testcase.read", description: "View test cases" },
+    { name: "testcase.update", description: "Update test cases" },
+    { name: "testcase.delete", description: "Delete test cases" },
+    { name: "testcase.run", description: "Run test cases" },
+    { name: "user.manage", description: "Manage users (create, update, delete)" },
+    { name: "role.manage", description: "Manage roles and permissions" },
+    { name: "system.settings", description: "Change system settings" },
+  ];
+
+  for (const permissionData of defaultPermissions) {
+    await prisma.permission.create({
+      data: permissionData,
+    });
+  }
+
+  console.log(`Created ${defaultPermissions.length} default permissions`);
+}
+
 main()
   .catch((e) => {
     console.error(e);
@@ -127,4 +179,4 @@ main()
   })
   .finally(async () => {
     await prisma.$disconnect();
-  });
+  }); 
