@@ -47,6 +47,8 @@ const createRoleFormSchema = () => {
   return z.object({
     roleId: z.string({
       required_error: "Please select a role",
+    }).refine(val => val !== "" && val !== "placeholder", {
+      message: "Please select a valid role"
     }),
   });
 };
@@ -106,10 +108,10 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleFormSchema),
     defaultValues: {
-      roleId: currentUserRoleId || "",
+      roleId: currentUserRoleId || "placeholder",
     },
     values: { 
-      roleId: currentUserRoleId || "" 
+      roleId: currentUserRoleId || "placeholder" 
     },
   });
 
@@ -123,9 +125,20 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
     try {
       setLoading(true);
       
+      // Validate that we have a real role ID
+      if (!data.roleId || data.roleId === "placeholder" || data.roleId === "no-role") {
+        toast.error("Please select a valid role");
+        return;
+      }
+      
       // Step 1: Determine basic role (admin/user) based on selected RBAC role
       const selectedRole = roles.find(r => r.id === data.roleId);
-      const basicRole = (selectedRole?.name.toLowerCase() === "admin") ? "admin" : "user";
+      if (!selectedRole) {
+        toast.error("Selected role not found");
+        return;
+      }
+      
+      const basicRole = (selectedRole.name.toLowerCase() === "admin") ? "admin" : "user";
       
       // Step 2: Update the basic role in the user model
       const userRoleResponse = await fetch(`/api/users/${user.id}/role`, {
@@ -154,7 +167,7 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
         toast.error("Role updated but permission assignment failed");
       }
       
-      toast.success(`Role updated successfully to ${selectedRole?.name || "selected role"}`);
+      toast.success(`Role updated successfully to ${selectedRole.name}`);
       onOpenChange(false);
       if (onRoleChange) onRoleChange();
     } catch (error: any) {
@@ -184,7 +197,7 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
                   <FormLabel>Role</FormLabel>
                   <Select 
                     onValueChange={field.onChange} 
-                    value={field.value || ""}
+                    value={field.value || "placeholder"}
                     disabled={isLoadingRoles}
                   >
                     <FormControl>
@@ -194,7 +207,7 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
                     </FormControl>
                     <SelectContent>
                       {roles.length === 0 ? (
-                        <SelectItem value="" disabled>No roles available</SelectItem>
+                        <SelectItem value="no-role" disabled>No roles available</SelectItem>
                       ) : (
                         roles.map((role) => (
                           <SelectItem key={role.id} value={role.id}>
@@ -220,7 +233,10 @@ export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialo
               </Button>
               <Button 
                 type="submit" 
-                disabled={loading || isLoadingRoles || roles.length === 0}
+                disabled={loading || isLoadingRoles || roles.length === 0 || 
+                  !form.getValues("roleId") || 
+                  form.getValues("roleId") === "placeholder" ||
+                  form.getValues("roleId") === "no-role"}
               >
                 {loading ? "Saving..." : "Save Changes"}
               </Button>
