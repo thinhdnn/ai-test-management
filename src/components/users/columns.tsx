@@ -17,6 +17,7 @@ import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
+import { RoleDialog } from "./role-dialog";
 
 export const columns: ColumnDef<User>[] = [
   {
@@ -130,6 +131,7 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const user = row.original;
       const [loading, setLoading] = useState(false);
+      const [showRoleDialog, setShowRoleDialog] = useState(false);
 
       const toggleUserStatus = async () => {
         try {
@@ -165,41 +167,48 @@ export const columns: ColumnDef<User>[] = [
       };
 
       return (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-            <DropdownMenuItem
-              onClick={() => navigator.clipboard.writeText(user.id)}
-            >
-              Copy ID
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href={`/users/${user.id}/edit`} className="w-full">
-                Edit
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href={`/users/${user.id}/change-password`} className="w-full">
-                Change Password
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Link href={`/users/${user.id}/edit/role`} className="w-full">
+        <>
+          <RoleDialog 
+            user={user} 
+            open={showRoleDialog} 
+            onOpenChange={setShowRoleDialog}
+            onRoleChange={() => window.location.reload()}
+          />
+          
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" className="h-8 w-8 p-0">
+                <span className="sr-only">Open menu</span>
+                <MoreHorizontal className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuLabel>Actions</DropdownMenuLabel>
+              <DropdownMenuItem
+                onClick={() => navigator.clipboard.writeText(user.id)}
+              >
+                Copy ID
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href={`/users/${user.id}/edit`} className="w-full">
+                  Edit
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Link href={`/users/${user.id}/change-password`} className="w-full">
+                  Change Password
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowRoleDialog(true)}>
                 Change Role
-              </Link>
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={toggleUserStatus} disabled={loading}>
-              {user.isActive ? "Disable User" : "Enable User"}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={toggleUserStatus} disabled={loading}>
+                {user.isActive ? "Disable User" : "Enable User"}
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </>
       );
     },
   },

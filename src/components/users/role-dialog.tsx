@@ -1,11 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { toast } from "sonner";
+import { User } from "@prisma/client";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 
 import {
   Form,
@@ -14,9 +23,8 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-  FormDescription,
 } from "@/components/ui/form";
-import { Button } from "@/components/ui/button";
+
 import {
   Select,
   SelectContent,
@@ -24,7 +32,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { User } from "@prisma/client";
+
+import { Button } from "@/components/ui/button";
 
 // Define Role type
 interface Role {
@@ -44,12 +53,14 @@ const createRoleFormSchema = () => {
 
 type RoleFormValues = z.infer<ReturnType<typeof createRoleFormSchema>>;
 
-interface RoleFormProps {
+interface RoleDialogProps {
   user: User;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onRoleChange?: () => void;
 }
 
-export function RoleForm({ user }: RoleFormProps) {
-  const router = useRouter();
+export function RoleDialog({ user, open, onOpenChange, onRoleChange }: RoleDialogProps) {
   const [loading, setLoading] = useState(false);
   const [roles, setRoles] = useState<Role[]>([]);
   const [isLoadingRoles, setIsLoadingRoles] = useState(true);
@@ -58,7 +69,10 @@ export function RoleForm({ user }: RoleFormProps) {
   // Fetch available roles and current user role
   useEffect(() => {
     const fetchRolesAndUserRole = async () => {
+      if (!open) return; // Only fetch when dialog is open
+      
       try {
+        setIsLoadingRoles(true);
         // Fetch available roles
         const rolesResponse = await fetch('/api/settings/rbac/roles');
         if (!rolesResponse.ok) {
@@ -85,19 +99,25 @@ export function RoleForm({ user }: RoleFormProps) {
     };
 
     fetchRolesAndUserRole();
-  }, [user.id]);
+  }, [user.id, open]);
 
   const roleFormSchema = createRoleFormSchema();
 
-  const defaultValues: Partial<RoleFormValues> = {
-    roleId: currentUserRoleId || "",
-  };
-
   const form = useForm<RoleFormValues>({
     resolver: zodResolver(roleFormSchema),
-    defaultValues,
-    values: { roleId: currentUserRoleId || "" }, // Update form values when currentUserRoleId changes
+    defaultValues: {
+      roleId: currentUserRoleId || "",
+    },
+    values: { 
+      roleId: currentUserRoleId || "" 
+    },
   });
+
+  useEffect(() => {
+    if (currentUserRoleId) {
+      form.setValue('roleId', currentUserRoleId);
+    }
+  }, [currentUserRoleId, form]);
 
   async function onSubmit(data: RoleFormValues) {
     try {
@@ -135,8 +155,8 @@ export function RoleForm({ user }: RoleFormProps) {
       }
       
       toast.success(`Role updated successfully to ${selectedRole?.name || "selected role"}`);
-      router.push("/users");
-      router.refresh();
+      onOpenChange(false);
+      if (onRoleChange) onRoleChange();
     } catch (error: any) {
       toast.error(error.message || "Something went wrong");
     } finally {
@@ -144,58 +164,70 @@ export function RoleForm({ user }: RoleFormProps) {
     }
   }
 
-  if (isLoadingRoles) {
-    return <div className="flex justify-center py-4">Loading roles...</div>;
-  }
-
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="roleId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>User Role</FormLabel>
-              <FormDescription>
-                The role determines what permissions the user has in the system.
-              </FormDescription>
-              <Select onValueChange={field.onChange} value={field.value || ""}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  {roles.length === 0 ? (
-                    <SelectItem value="" disabled>No roles available</SelectItem>
-                  ) : (
-                    roles.map((role) => (
-                      <SelectItem key={role.id} value={role.id}>
-                        {role.name} {role.description ? `- ${role.description}` : ''}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <div className="flex justify-end">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.back()}
-            className="mr-2"
-          >
-            Cancel
-          </Button>
-          <Button type="submit" disabled={loading || roles.length === 0}>
-            {loading ? "Saving..." : "Save Changes"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Change User Role</DialogTitle>
+          <DialogDescription>
+            Update the role for user <span className="font-medium">{user.username}</span>
+          </DialogDescription>
+        </DialogHeader>
+        
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4 py-4">
+            <FormField
+              control={form.control}
+              name="roleId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Role</FormLabel>
+                  <Select 
+                    onValueChange={field.onChange} 
+                    value={field.value || ""}
+                    disabled={isLoadingRoles}
+                  >
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder={isLoadingRoles ? "Loading roles..." : "Select a role"} />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {roles.length === 0 ? (
+                        <SelectItem value="" disabled>No roles available</SelectItem>
+                      ) : (
+                        roles.map((role) => (
+                          <SelectItem key={role.id} value={role.id}>
+                            {role.name} {role.description ? `- ${role.description}` : ''}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <DialogFooter className="pt-4">
+              <Button 
+                type="button" 
+                variant="outline" 
+                onClick={() => onOpenChange(false)}
+                disabled={loading}
+              >
+                Cancel
+              </Button>
+              <Button 
+                type="submit" 
+                disabled={loading || isLoadingRoles || roles.length === 0}
+              >
+                {loading ? "Saving..." : "Save Changes"}
+              </Button>
+            </DialogFooter>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
   );
 } 
