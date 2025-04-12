@@ -5,7 +5,7 @@ import * as bcrypt from "bcrypt";
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
-    const { username, password, role, createdBy = "system" } = body;
+    const { username, email, password, role, createdBy = "system" } = body;
 
     // Validate input
     if (!username || !password) {
@@ -34,6 +34,7 @@ export async function POST(req: NextRequest) {
     const user = await prisma.user.create({
       data: {
         username,
+        email,
         password: hashedPassword,
         role: role || "user",
         createdBy: createdBy,
@@ -63,6 +64,7 @@ export async function GET() {
       select: {
         id: true,
         username: true,
+        email: true,
         role: true,
         isActive: true,
         createdAt: true,

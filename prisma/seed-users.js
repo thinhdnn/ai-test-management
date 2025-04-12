@@ -20,6 +20,7 @@ async function main() {
     data: {
       username: "admin",
       password: adminPassword,
+      email: "admin@gmail.com",
       role: "admin",
     },
   });
@@ -31,6 +32,7 @@ async function main() {
     data: {
       username: "user",
       password: userPassword,
+      email: "user@gmail.com",
       role: "user",
     },
   });

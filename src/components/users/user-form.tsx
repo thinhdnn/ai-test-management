@@ -38,6 +38,9 @@ const createUserFormSchema = (roles: Role[]) => {
     username: z.string().min(3, {
       message: "Username must be at least 3 characters",
     }),
+    email: z.string().email({
+      message: "Please enter a valid email address",
+    }).optional().or(z.literal('')),
     password: z.string().min(6, {
       message: "Password must be at least 6 characters",
     }),
@@ -80,6 +83,7 @@ export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
 
   const defaultValues: Partial<UserFormValues> = {
     username: user?.username || "",
+    email: user?.email || "",
     password: user?.password || "",
     roleId: user?.roleId || "none",
   };
@@ -100,6 +104,7 @@ export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
       // Prepare data for API
       const userData = {
         username: data.username,
+        email: data.email,
         password: data.password,
         role: basicRole,
         createdBy: "system", // Could be updated to the current user
@@ -166,6 +171,23 @@ export function UserForm({ user }: { user?: Partial<UserFormValues> }) {
               <FormLabel>Username</FormLabel>
               <FormControl>
                 <Input placeholder="Enter username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="email"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Email</FormLabel>
+              <FormControl>
+                <Input
+                  type="email"
+                  placeholder="Enter email address (optional)"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>

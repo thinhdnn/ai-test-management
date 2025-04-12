@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { Button } from "@/components/ui/button";
-import { ArrowUpDown, MoreHorizontal, Check, X } from "lucide-react";
+import { ArrowUpDown, MoreHorizontal, Check, X, Mail } from "lucide-react";
 import { formatDate } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -35,10 +35,23 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => <div>{row.getValue("username")}</div>,
   },
   {
-    accessorKey: "id",
-    header: "ID",
+    accessorKey: "email",
+    header: ({ column }) => {
+      return (
+        <Button
+          variant="ghost"
+          onClick={() => column.toggleSorting(column.getIsSorted() === "asc")}
+        >
+          Email
+          <ArrowUpDown className="ml-2 h-4 w-4" />
+        </Button>
+      );
+    },
     cell: ({ row }) => (
-      <div className="font-mono text-xs">{row.getValue("id")}</div>
+      <div className="flex items-center">
+        <Mail className="h-4 w-4 mr-2 text-muted-foreground" />
+        <span>{row.getValue("email") || "No email"}</span>
+      </div>
     ),
   },
   {
