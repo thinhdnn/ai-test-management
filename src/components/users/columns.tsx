@@ -189,6 +189,11 @@ export const columns: ColumnDef<User>[] = [
                 Change Password
               </Link>
             </DropdownMenuItem>
+            <DropdownMenuItem>
+              <Link href={`/users/${user.id}/edit/role`} className="w-full">
+                Change Role
+              </Link>
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={toggleUserStatus} disabled={loading}>
               {user.isActive ? "Disable User" : "Enable User"}
