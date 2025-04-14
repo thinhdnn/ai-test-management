@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 interface Project {
   id: string;
@@ -24,6 +25,7 @@ export default function ProjectFixturesPage() {
   const [project, setProject] = useState<Project | null>(null);
   const [fixturesLoading, setFixturesLoading] = useState(true);
   const router = useRouter();
+  const { hasPermission } = usePermission();
   
   // State cho dialog tạo fixture
   const [showNewFixtureDialog, setShowNewFixtureDialog] = useState(false);
@@ -70,6 +72,12 @@ export default function ProjectFixturesPage() {
 
   // Hàm xử lý tạo fixture mới
   const handleCreateFixture = async () => {
+    // Kiểm tra quyền tạo fixture
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create fixtures");
+      return;
+    }
+
     try {
       // Tạo tên file dựa trên tên fixture (loại bỏ ký tự đặc biệt, thay khoảng trắng bằng dấu gạch dưới)
       const safeFileName = newFixture.name
@@ -114,6 +122,16 @@ export default function ProjectFixturesPage() {
     }
   };
 
+  // Hàm kiểm tra quyền và mở dialog tạo fixture
+  const handleOpenCreateDialog = () => {
+    // Kiểm tra quyền trước khi mở dialog tạo fixture
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create fixtures");
+      return;
+    }
+    setShowNewFixtureDialog(true);
+  };
+
   // Loading state for the entire page
   if (loading || projectLoading) {
     return (
@@ -135,6 +153,13 @@ export default function ProjectFixturesPage() {
   return (
     <>
       <FixturesTab projectId={projectId} />
+      
+      {/* Nút tạo fixture mới với kiểm tra quyền */}
+      <div className="flex justify-end mt-4 mb-6">
+        <Button onClick={handleOpenCreateDialog}>
+          Create New Fixture
+        </Button>
+      </div>
       
       {/* Dialog tạo fixture mới */}
       <Dialog open={showNewFixtureDialog} onOpenChange={setShowNewFixtureDialog}>

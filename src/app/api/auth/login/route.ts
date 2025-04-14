@@ -17,13 +17,21 @@ export async function POST(request: Request) {
       );
     }
 
-    // Find user in database
+    // Find user in database with roles and their permissions
     const user = await prisma.user.findUnique({
       where: { username },
       include: {
         roles: {
           include: {
-            role: true
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -62,6 +70,14 @@ export async function POST(request: Request) {
 
     // Lấy thông tin vai trò RBAC thực tế
     const userRoles = user.roles.map(ur => ur.role.name);
+    
+    // Tạo danh sách permissions không trùng lặp từ tất cả roles của user
+    const userPermissions = Array.from(new Set(
+      user.roles.flatMap(ur => 
+        ur.role.permissions.map(rp => rp.permission.name)
+      )
+    ));
+    
     const isAdmin = userRoles.some(roleName => 
       roleName.toLowerCase() === "administrator"
     );
@@ -72,6 +88,7 @@ export async function POST(request: Request) {
         id: user.id,
         username: user.username,
         roles: userRoles,
+        permissions: userPermissions,
         isAdmin: isAdmin
       },
       process.env.JWT_SECRET || "secret",
@@ -83,6 +100,7 @@ export async function POST(request: Request) {
       id: user.id,
       username: user.username,
       roles: userRoles,
+      permissions: userPermissions,
       isAdmin: isAdmin,
       token: token, // Include token in response for client-side storage
     });

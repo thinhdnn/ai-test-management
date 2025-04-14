@@ -12,12 +12,25 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { useRouter } from "next/navigation";
 
 export default function AISettingsPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [activeAiProvider, setActiveAiProvider] = useState("gemini");
+  const router = useRouter();
+  const { hasPermission } = usePermission();
+
+  // Check user permissions
+  useEffect(() => {
+    if (!hasPermission("settings.ai")) {
+      toast.error("You don't have permission to view AI settings");
+      router.push("/");
+      return;
+    }
+  }, [hasPermission, router]);
 
   // Fetch initial settings
   useEffect(() => {
@@ -54,6 +67,12 @@ export default function AISettingsPage() {
 
   const handleSave = async () => {
     try {
+      // Check permission before saving
+      if (!hasPermission("settings.ai.update")) {
+        toast.error("You don't have permission to update AI settings");
+        return;
+      }
+      
       setIsSaving(true);
 
       // API call to save settings
@@ -114,13 +133,13 @@ export default function AISettingsPage() {
                 <Tabs
                   defaultValue={activeAiProvider}
                   className="w-full"
-                  onValueChange={handleAiProviderChange}
+                  onValueChange={hasPermission("settings.ai.update") ? handleAiProviderChange : undefined}
                 >
                   <TabsList className="grid grid-cols-4 w-full">
-                    <TabsTrigger value="gemini">Gemini</TabsTrigger>
-                    <TabsTrigger value="gpt">GPT</TabsTrigger>
-                    <TabsTrigger value="grok">Grok</TabsTrigger>
-                    <TabsTrigger value="claude">Claude</TabsTrigger>
+                    <TabsTrigger value="gemini" disabled={!hasPermission("settings.ai.update")}>Gemini</TabsTrigger>
+                    <TabsTrigger value="gpt" disabled={!hasPermission("settings.ai.update")}>GPT</TabsTrigger>
+                    <TabsTrigger value="grok" disabled={!hasPermission("settings.ai.update")}>Grok</TabsTrigger>
+                    <TabsTrigger value="claude" disabled={!hasPermission("settings.ai.update")}>Claude</TabsTrigger>
                   </TabsList>
 
                   <TabsContent value="gemini" className="space-y-4 mt-4">
@@ -140,6 +159,7 @@ export default function AISettingsPage() {
                           handleChange("gemini_api_key", e.target.value)
                         }
                         placeholder="Enter your Gemini API key"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
 
@@ -157,6 +177,7 @@ export default function AISettingsPage() {
                         onChange={(e) =>
                           handleChange("gemini_model", e.target.value)
                         }
+                        disabled={!hasPermission("settings.ai.update")}
                       >
                         <option value="gemini-2.0-flash">
                           Gemini 2.0 Flash
@@ -201,6 +222,7 @@ export default function AISettingsPage() {
                           handleChange("openai_api_key", e.target.value)
                         }
                         placeholder="Enter your OpenAI API key"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
 
@@ -218,6 +240,7 @@ export default function AISettingsPage() {
                         onChange={(e) =>
                           handleChange("openai_model", e.target.value)
                         }
+                        disabled={!hasPermission("settings.ai.update")}
                       >
                         <option value="gpt-4o">GPT-4o</option>
                         <option value="gpt-4-turbo">GPT-4 Turbo</option>
@@ -244,6 +267,7 @@ export default function AISettingsPage() {
                           handleChange("grok_api_key", e.target.value)
                         }
                         placeholder="Enter your Grok API key"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
 
@@ -264,6 +288,7 @@ export default function AISettingsPage() {
                           handleChange("grok_api_endpoint", e.target.value)
                         }
                         placeholder="Enter Grok API endpoint"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
 
@@ -281,6 +306,7 @@ export default function AISettingsPage() {
                         onChange={(e) =>
                           handleChange("grok_model", e.target.value)
                         }
+                        disabled={!hasPermission("settings.ai.update")}
                       >
                         <optgroup label="Text Models">
                           <option value="grok-2-latest">Grok 2 (Latest)</option>
@@ -320,6 +346,7 @@ export default function AISettingsPage() {
                           handleChange("claude_api_key", e.target.value)
                         }
                         placeholder="Enter your Anthropic API key"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
 
@@ -339,6 +366,7 @@ export default function AISettingsPage() {
                         onChange={(e) =>
                           handleChange("claude_model", e.target.value)
                         }
+                        disabled={!hasPermission("settings.ai.update")}
                       >
                         <option value="claude-3-opus-20240229">
                           Claude 3 Opus
@@ -371,6 +399,7 @@ export default function AISettingsPage() {
                           handleChange("claude_api_endpoint", e.target.value)
                         }
                         placeholder="Enter Claude API endpoint"
+                        disabled={!hasPermission("settings.ai.update")}
                       />
                     </div>
                   </TabsContent>
@@ -384,6 +413,7 @@ export default function AISettingsPage() {
               onClick={handleSave}
               isLoading={isSaving}
               saveText="Save AI Settings"
+              disabled={!hasPermission("settings.ai.update")}
             />
           </CardFooter>
         </Card>

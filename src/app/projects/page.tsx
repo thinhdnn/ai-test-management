@@ -13,6 +13,7 @@ import {
 import { formatDate } from "@/lib/utils";
 import { ProjectDeleteButton } from "@/components/project-delete-button";
 import { useEffect, useState } from "react";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 interface Project {
   id: string;
@@ -43,6 +44,12 @@ export default function ProjectsPage() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const { hasPermission } = usePermission();
+
+  // Kiểm tra quyền của người dùng
+  const canCreateProject = hasPermission("project.create");
+  const canDeleteProject = hasPermission("project.delete");
+  const canUpdateProject = hasPermission("project.update");
 
   const handleProjectDelete = (projectId: string) => {
     setProjects(projects.filter(project => project.id !== projectId));
@@ -95,7 +102,7 @@ export default function ProjectsPage() {
     <div className="container px-4 py-6 sm:px-6 md:px-8">
       <div className="flex items-center justify-between">
         <h1 className="text-3xl font-bold tracking-tight">Projects</h1>
-        {projects.length > 0 && (
+        {projects.length > 0 && canCreateProject && (
           <Button asChild>
             <Link href="/projects/new">Create New Project</Link>
           </Button>
@@ -125,9 +132,11 @@ export default function ProjectsPage() {
             <p className="text-muted-foreground mb-6">
               Create your first project to start managing your test cases
             </p>
-            <Button asChild size="lg">
-              <Link href="/projects/new">Add first your project</Link>
-            </Button>
+            {canCreateProject && (
+              <Button asChild size="lg">
+                <Link href="/projects/new">Add first your project</Link>
+              </Button>
+            )}
           </div>
         ) : (
           projects.map((project) => (
@@ -186,11 +195,13 @@ export default function ProjectsPage() {
                     </Link>
                   </Button>
                 </div>
-                <ProjectDeleteButton
-                  projectId={project.id}
-                  projectName={project.name}
-                  onDelete={handleProjectDelete}
-                />
+                {canDeleteProject && (
+                  <ProjectDeleteButton
+                    projectId={project.id}
+                    projectName={project.name}
+                    onDelete={handleProjectDelete}
+                  />
+                )}
               </CardFooter>
             </Card>
           ))

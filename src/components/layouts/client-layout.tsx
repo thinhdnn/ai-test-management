@@ -16,10 +16,10 @@ export function ClientLayout({ children }: ClientLayoutProps) {
   }
 
   return (
-    <div className="flex h-full">
+    <div className="flex min-h-screen overflow-hidden">
       <Sidebar />
-      <div className="flex-1 overflow-auto lg:ml-64">
-        <main className="min-h-screen">{children}</main>
+      <div className="flex-1 lg:ml-64">
+        <main>{children}</main>
       </div>
     </div>
   );

@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ProjectSettings } from "@/components/project/project-settings";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 // Types
 interface Project {
@@ -30,7 +31,9 @@ interface Project {
 
 export default function ProjectSettingsPage() {
   const params = useParams<{ id: string }>();
+  const router = useRouter();
   const projectId = params.id;
+  const { hasPermission } = usePermission();
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -78,6 +81,13 @@ export default function ProjectSettingsPage() {
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
   useEffect(() => {
+    // Kiểm tra quyền xem cài đặt dự án
+    if (!hasPermission("project.view")) {
+      toast.error("You don't have permission to view project settings");
+      router.push(`/projects/${projectId}`);
+      return;
+    }
+    
     // Fetch project details
     const fetchProject = async () => {
       try {
@@ -107,7 +117,7 @@ export default function ProjectSettingsPage() {
     };
 
     fetchProject();
-  }, [projectId]);
+  }, [projectId, hasPermission, router]);
 
   useEffect(() => {
     // Get Playwright configuration when project is loaded
@@ -136,6 +146,12 @@ export default function ProjectSettingsPage() {
 
   const handleSave = async () => {
     if (!editedProject) return;
+
+    // Kiểm tra quyền chỉnh sửa dự án
+    if (!hasPermission("project.update")) {
+      toast.error("You don't have permission to update project settings");
+      return;
+    }
 
     try {
       setIsSaving(true);
@@ -301,6 +317,12 @@ export default function ProjectSettingsPage() {
 
   // Function to save Playwright configuration
   const savePlaywrightConfig = async () => {
+    // Kiểm tra quyền cập nhật cấu hình
+    if (!hasPermission("project.configure")) {
+      toast.error("You don't have permission to update Playwright configuration");
+      return;
+    }
+
     try {
       setIsSavingConfig(true);
 
@@ -381,7 +403,14 @@ export default function ProjectSettingsPage() {
     <ProjectSettings
       project={project}
       editMode={editMode}
-      setEditMode={setEditMode}
+      setEditMode={(mode) => {
+        // Kiểm tra quyền khi bật chế độ chỉnh sửa
+        if (mode && !hasPermission("project.update")) {
+          toast.error("You don't have permission to edit project settings");
+          return;
+        }
+        setEditMode(mode);
+      }}
       editedProject={editedProject}
       handleInputChange={handleInputChange}
       handleSelectChange={handleSelectChange}

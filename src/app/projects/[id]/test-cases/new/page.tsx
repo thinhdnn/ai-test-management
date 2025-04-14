@@ -26,17 +26,27 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export default function NewTestCasePage() {
   const router = useRouter();
   const params = useParams();
   const projectId = params.id as string;
+  const { hasPermission } = usePermission();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [isCreateTagOpen, setIsCreateTagOpen] = useState(false);
   const [newTag, setNewTag] = useState({ value: "", label: "" });
   const [customTags, setCustomTags] = useState<Array<{ value: string, label: string }>>([]);
+
+  // Kiểm tra quyền khi component được tải
+  useEffect(() => {
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create test cases");
+      router.push(`/projects/${projectId}/test-cases`);
+    }
+  }, [hasPermission, projectId, router]);
 
   // Load custom tags when component mounts
   useEffect(() => {
@@ -99,6 +109,13 @@ export default function NewTestCasePage() {
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+
+    // Kiểm tra quyền trước khi submit
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create test cases");
+      return;
+    }
+    
     setIsSubmitting(true);
     setError(null);
 

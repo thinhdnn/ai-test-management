@@ -44,6 +44,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 interface TestCase {
   id: string;
@@ -69,6 +70,7 @@ export function TestCaseWorklist({
   refreshTestCases,
 }: TestCaseWorklistProps) {
   const router = useRouter();
+  const { hasPermission } = usePermission();
   const [currentPage, setCurrentPage] = useState(1);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -79,6 +81,11 @@ export function TestCaseWorklist({
   const [showTestResult, setShowTestResult] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
   const itemsPerPage = 10;
+
+  // Kiểm tra quyền để biết người dùng có thể tạo test case hay không
+  const canCreateTestCase = hasPermission("testcase.create");
+  const canDeleteTestCase = hasPermission("testcase.delete");
+  const canRunTestCase = hasPermission("testcase.run");
 
   // Get unique tags from all test cases
   const availableTags = useMemo(() => {
@@ -161,11 +168,13 @@ export function TestCaseWorklist({
         <p className="text-muted-foreground">
           No test cases found for this project.
         </p>
-        <Button asChild className="mt-4">
-          <Link href={`/projects/${projectId}/test-cases/new`}>
-            Create First Test Case
-          </Link>
-        </Button>
+        {canCreateTestCase && (
+          <Button asChild className="mt-4">
+            <Link href={`/projects/${projectId}/test-cases/new`}>
+              Create First Test Case
+            </Link>
+          </Button>
+        )}
       </div>
     );
   }
@@ -519,34 +528,35 @@ export function TestCaseWorklist({
                         ))}
                       </div>
                     </td>
-                    <td className="px-4 py-2 border text-center">
-                      <div className="flex justify-center gap-2">
-                        {/* TODO: API doesn't return isManual property yet. 
-                            Once API is updated, this conditional rendering will work correctly */}
-                        {!testCase.isManual && (
+                    <td
+                      className="p-2 cursor-pointer"
+                      onClick={() =>
+                        router.push(
+                          `/projects/${projectId}/test-cases/${testCase.id}`
+                        )
+                      }
+                    >
+                      <div className="flex items-center justify-end space-x-1">
+                        {canRunTestCase && (
                           <RunTestButton
                             projectId={projectId}
                             testCaseId={testCase.id}
-                            mode="single"
-                            variant="ghost"
                             size="icon"
-                            title="Run Test"
-                            onTestRunComplete={(result) => {
-                              // Only refresh the list after test is complete
-                              refreshTestCases();
-                            }}
                             onClick={(e) => e.stopPropagation()}
+                            onTestRunComplete={() => refreshTestCases()}
                           />
                         )}
-                        <TestCaseDeleteButton
-                          projectId={projectId}
-                          testCaseId={testCase.id}
-                          testCaseName={testCase.name}
-                          size="icon"
-                          title="Delete Test Case"
-                          onClick={(e) => e.stopPropagation()}
-                          refreshTestCases={refreshTestCases}
-                        />
+                        {canDeleteTestCase && (
+                          <TestCaseDeleteButton
+                            projectId={projectId}
+                            testCaseId={testCase.id}
+                            testCaseName={testCase.name}
+                            size="icon"
+                            title="Delete Test Case"
+                            onClick={(e) => e.stopPropagation()}
+                            refreshTestCases={refreshTestCases}
+                          />
+                        )}
                       </div>
                     </td>
                   </tr>

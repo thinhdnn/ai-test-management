@@ -1,16 +1,29 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { hasPermission } = usePermission();
   const [formData, setFormData] = useState<Record<string, string>>({});
   const [isLoading, setIsLoading] = useState(false);
   const [isInitialLoading, setIsInitialLoading] = useState(true);
+
+  // Kiểm tra quyền người dùng
+  useEffect(() => {
+    if (!hasPermission("settings.view")) {
+      toast.error("You don't have permission to view settings");
+      router.push("/");
+      return;
+    }
+  }, [hasPermission, router]);
 
   // Fetch initial settings
   useEffect(() => {
@@ -52,6 +65,12 @@ export default function SettingsPage() {
   };
 
   const handleSubmit = async () => {
+    // Kiểm tra quyền cập nhật settings
+    if (!hasPermission("settings.update")) {
+      toast.error("You don't have permission to update settings");
+      return;
+    }
+
     try {
       setIsLoading(true);
       const response = await fetch('/api/settings', {
@@ -98,6 +117,7 @@ export default function SettingsPage() {
               id="siteName"
               value={formData.siteName || ''}
               onChange={(e) => handleInputChange('siteName', e.target.value)}
+              disabled={!hasPermission("settings.update")}
             />
           </div>
           <div className="space-y-2">
@@ -106,13 +126,17 @@ export default function SettingsPage() {
               id="siteDescription"
               value={formData.siteDescription || ''}
               onChange={(e) => handleInputChange('siteDescription', e.target.value)}
+              disabled={!hasPermission("settings.update")}
             />
           </div>
         </CardContent>
       </Card>
 
       <div className="mt-4">
-        <Button onClick={handleSubmit} disabled={isLoading}>
+        <Button 
+          onClick={handleSubmit} 
+          disabled={isLoading || !hasPermission("settings.update")}
+        >
           {isLoading ? 'Saving...' : 'Save Settings'}
         </Button>
       </div>

@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { RoleDialog } from "./role-dialog";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 // Extend User type to include virtual fields from API
 // Sử dụng type thay vì interface để tránh lỗi extends
@@ -191,8 +192,14 @@ export const columns: ColumnDef<User>[] = [
       const user = row.original;
       const [loading, setLoading] = useState(false);
       const [showRoleDialog, setShowRoleDialog] = useState(false);
+      const { hasPermission } = usePermission();
 
       const toggleUserStatus = async () => {
+        if (!hasPermission("users.update")) {
+          toast.error("You don't have permission to change user status");
+          return;
+        }
+
         try {
           setLoading(true);
           const response = await fetch(`/api/users/${user.id}/status`, {
@@ -223,6 +230,14 @@ export const columns: ColumnDef<User>[] = [
         } finally {
           setLoading(false);
         }
+      };
+
+      const handleRoleDialogOpen = () => {
+        if (!hasPermission("users.update")) {
+          toast.error("You don't have permission to change user roles");
+          return;
+        }
+        setShowRoleDialog(true);
       };
 
       return (
@@ -257,23 +272,31 @@ export const columns: ColumnDef<User>[] = [
               >
                 Copy ID
               </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href={`/users/${user.id}/edit`} className="w-full">
-                  Edit
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Link href={`/users/${user.id}/change-password`} className="w-full">
-                  Change Password
-                </Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setShowRoleDialog(true)}>
-                Change Role
-              </DropdownMenuItem>
+              {hasPermission("users.update") && (
+                <DropdownMenuItem>
+                  <Link href={`/users/${user.id}/edit`} className="w-full">
+                    Edit
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {hasPermission("users.update") && (
+                <DropdownMenuItem>
+                  <Link href={`/users/${user.id}/change-password`} className="w-full">
+                    Change Password
+                  </Link>
+                </DropdownMenuItem>
+              )}
+              {hasPermission("users.update") && (
+                <DropdownMenuItem onClick={handleRoleDialogOpen}>
+                  Change Role
+                </DropdownMenuItem>
+              )}
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={toggleUserStatus} disabled={loading}>
-                {user.isActive ? "Disable User" : "Enable User"}
-              </DropdownMenuItem>
+              {hasPermission("users.update") && (
+                <DropdownMenuItem onClick={toggleUserStatus} disabled={loading}>
+                  {user.isActive ? "Disable User" : "Enable User"}
+                </DropdownMenuItem>
+              )}
             </DropdownMenuContent>
           </DropdownMenu>
         </>

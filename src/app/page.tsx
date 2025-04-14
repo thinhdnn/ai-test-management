@@ -21,6 +21,9 @@ export default function Home() {
         </p>
         <div className="flex flex-wrap items-center justify-center gap-4">
           <Button asChild size="lg">
+            <Link href="/dashboard">View Dashboard</Link>
+          </Button>
+          <Button asChild variant="outline" size="lg">
             <Link href="/projects">View Projects</Link>
           </Button>
           <Button asChild variant="outline" size="lg">
@@ -30,6 +33,26 @@ export default function Home() {
       </div>
 
       <div className="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <Card>
+          <CardHeader>
+            <CardTitle>Dashboard Overview</CardTitle>
+            <CardDescription>
+              Monitor your testing metrics at a glance
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <p>
+              Get a quick overview of your projects, tests, and team performance.
+              View counts, pass/fail rates, and top contributors.
+            </p>
+          </CardContent>
+          <CardFooter>
+            <Button asChild variant="outline" className="w-full">
+              <Link href="/dashboard">View Dashboard</Link>
+            </Button>
+          </CardFooter>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle>Project Management</CardTitle>

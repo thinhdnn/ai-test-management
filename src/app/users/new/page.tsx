@@ -1,12 +1,24 @@
-import { Metadata } from "next";
-import { UserForm } from "@/components/users/user-form";
+'use client';
 
-export const metadata: Metadata = {
-  title: "Add New User",
-  description: "Add a new user to the system",
-};
+import { UserForm } from "@/components/users/user-form";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { useRouter } from "next/navigation";
+import { useEffect } from "react";
+import { toast } from "sonner";
 
 export default function NewUserPage() {
+  const router = useRouter();
+  const { hasPermission } = usePermission();
+
+  // Check permissions
+  useEffect(() => {
+    if (!hasPermission("users.create")) {
+      toast.error("You don't have permission to create users");
+      router.push("/users");
+      return;
+    }
+  }, [hasPermission, router]);
+
   return (
     <div className="container px-4 py-6 sm:px-6 md:px-8">
       <h1 className="text-3xl font-bold tracking-tight mb-8">Add New User</h1>

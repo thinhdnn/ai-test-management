@@ -40,7 +40,15 @@ export async function GET(request: Request) {
         username: true,
         roles: {
           include: {
-            role: true
+            role: {
+              include: {
+                permissions: {
+                  include: {
+                    permission: true
+                  }
+                }
+              }
+            }
           }
         }
       },
@@ -58,6 +66,14 @@ export async function GET(request: Request) {
 
     // Lấy thông tin vai trò RBAC thực tế
     const userRoles = user.roles.map(ur => ur.role.name);
+    
+    // Tạo danh sách permissions không trùng lặp từ tất cả roles của user
+    const userPermissions = Array.from(new Set(
+      user.roles.flatMap(ur => 
+        ur.role.permissions.map(rp => rp.permission.name)
+      )
+    ));
+    
     const isAdmin = userRoles.some(roleName => 
       roleName.toLowerCase() === "administrator"
     );
@@ -71,6 +87,7 @@ export async function GET(request: Request) {
       id: user.id,
       username: user.username,
       roles: userRoles,
+      permissions: userPermissions,
       isAdmin: isAdmin,
       token, // Include token in response for client-side storage
     });

@@ -13,7 +13,9 @@ import { toast } from "sonner";
 interface User {
   id: string;
   username: string;
-  role: string;
+  roles: string[];
+  permissions: string[];
+  isAdmin: boolean;
   token?: string;
 }
 

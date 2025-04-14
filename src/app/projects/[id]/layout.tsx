@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { ProjectDeleteButton } from "@/components/project-delete-button";
 import { RunAllTestsButton } from "@/components/run-all-tests-button";
 import { useState, useEffect } from "react";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { useRouter } from "next/navigation";
 
 // Tạo kiểu dữ liệu cho project
 interface Project {
@@ -21,9 +23,16 @@ export default function ProjectLayout({
   const params = useParams<{ id: string }>();
   const projectId = params.id;
   const pathname = usePathname();
+  const { hasPermission } = usePermission();
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+
+  // Kiểm tra các quyền cần thiết
+  const canDeleteProject = hasPermission("project.delete");
+  const canCreateTestCase = hasPermission("testcase.create");
+  const canRunTests = hasPermission("testcase.run") || hasPermission("project.run");
 
   useEffect(() => {
     const fetchProject = async () => {
@@ -119,22 +128,31 @@ export default function ProjectLayout({
           {project?.name || "Project"}
         </h1>
         <div className="flex gap-2">
-          <RunAllTestsButton projectId={projectId} />
-          <Button asChild size="sm">
-            <Link href={`/projects/${projectId}/test-cases/new`}>
-              Add Test Case
-            </Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link href={`/projects/${projectId}/fixtures/new`}>
-              Add Fixture
-            </Link>
-          </Button>
-          {project && (
+          {canRunTests && (
+            <RunAllTestsButton projectId={projectId} />
+          )}
+          
+          {canCreateTestCase && (
+            <Button asChild size="sm">
+              <Link href={`/projects/${projectId}/test-cases/new`}>
+                Add Test Case
+              </Link>
+            </Button>
+          )}
+          
+          {canCreateTestCase && (
+            <Button asChild size="sm">
+              <Link href={`/projects/${projectId}/fixtures/new`}>
+                Add Fixture
+              </Link>
+            </Button>
+          )}
+          
+          {project && canDeleteProject && (
             <ProjectDeleteButton
               projectId={projectId}
               projectName={project.name}
-              redirectToProjects={true}
+              onDelete={() => router.push("/projects")}
             />
           )}
         </div>

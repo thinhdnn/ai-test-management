@@ -6,6 +6,9 @@ import { columns } from "@/components/users/columns";
 import { DataTable } from "@/components/ui/data-table";
 import { User as PrismaUser } from "@prisma/client";
 import { useState, useEffect, useCallback } from "react";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 // Extend User type to include virtual fields from API
 type User = Omit<PrismaUser, 'role'> & {
@@ -30,6 +33,17 @@ export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const { hasPermission } = usePermission();
+  const router = useRouter();
+  
+  // Check permissions
+  useEffect(() => {
+    if (!hasPermission("users.view")) {
+      toast.error("You don't have permission to view users");
+      router.push("/");
+      return;
+    }
+  }, [hasPermission, router]);
   
   const fetchUsers = useCallback(async () => {
     try {
@@ -67,9 +81,11 @@ export default function UsersPage() {
     <div className="container px-4 py-6 sm:px-6 md:px-8">
       <div className="flex items-center justify-between mb-8">
         <h1 className="text-3xl font-bold tracking-tight">User Management</h1>
-        <Button asChild>
-          <Link href="/users/new">Add User</Link>
-        </Button>
+        {hasPermission("users.create") && (
+          <Button asChild>
+            <Link href="/users/new">Add User</Link>
+          </Button>
+        )}
       </div> 
 
       {users.length === 0 && !loading ? (

@@ -52,6 +52,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { usePermission } from "@/lib/hooks/usePermission";
+import { useRouter } from "next/navigation";
 
 // Define types for the data
 interface Permission {
@@ -126,6 +128,18 @@ export default function RBACPage() {
   const [editingUser, setEditingUser] = useState<User | null>(null);
   const [selectedUserRoles, setSelectedUserRoles] = useState<string[]>([]);
   const [isUpdatingUserRoles, setIsUpdatingUserRoles] = useState(false);
+
+  const router = useRouter();
+  const { hasPermission } = usePermission();
+
+  // Kiểm tra quyền người dùng ngay khi component được tải
+  useEffect(() => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to manage RBAC settings");
+      router.push("/settings");
+      return;
+    }
+  }, [hasPermission, router]);
 
   // Fetch initial data
   useEffect(() => {
@@ -213,11 +227,6 @@ export default function RBACPage() {
     });
   };
 
-  // Check if a role has a specific permission
-  const hasPermission = (roleId: string, permissionId: string) => {
-    return rolePermissions[roleId]?.includes(permissionId) || false;
-  };
-
   // Handle opening the edit role dialog
   const handleEditRoleClick = (role: Role) => {
     setRoleToEdit({
@@ -236,6 +245,11 @@ export default function RBACPage() {
 
   // Handle editing a role
   const handleEditRole = async () => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to update roles");
+      return;
+    }
+    
     if (!roleToEdit.name.trim()) {
       toast.error('Role name is required');
       return;
@@ -286,6 +300,11 @@ export default function RBACPage() {
 
   // Handle deleting a role
   const handleDeleteRole = async () => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to delete roles");
+      return;
+    }
+    
     if (!roleToDelete) return;
 
     try {
@@ -320,6 +339,11 @@ export default function RBACPage() {
 
   // Handle adding a new role
   const handleAddRole = async () => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to create roles");
+      return;
+    }
+    
     if (!newRole.name.trim()) {
       toast.error('Role name is required');
       return;
@@ -360,6 +384,11 @@ export default function RBACPage() {
 
   // Handle adding a new permission
   const handleAddPermission = async () => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to create permissions");
+      return;
+    }
+    
     if (!newPermission.name.trim()) {
       toast.error('Permission name is required');
       return;
@@ -406,6 +435,11 @@ export default function RBACPage() {
 
   // Handle user roles update
   const handleUpdateUserRoles = async () => {
+    if (!hasPermission("rbac.manage")) {
+      toast.error("You don't have permission to update user roles");
+      return;
+    }
+    
     if (!editingUser) return;
     
     try {
@@ -660,7 +694,7 @@ export default function RBACPage() {
                           {roles.map((role) => (
                             <TableCell key={role.id} className="text-center">
                               <Checkbox
-                                checked={hasPermission(role.id, permission.id)}
+                                checked={rolePermissions[role.id]?.includes(permission.id) || false}
                                 onCheckedChange={() =>
                                   togglePermission(role.id, permission.id)
                                 }

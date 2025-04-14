@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -24,9 +24,11 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import { BROWSER_OPTIONS, ENVIRONMENT_OPTIONS } from "@/lib/utils";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export default function NewProjectPage() {
   const router = useRouter();
+  const { hasPermission } = usePermission();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
@@ -35,6 +37,14 @@ export default function NewProjectPage() {
     environment: "development",
     library: "",
   });
+
+  // Kiểm tra quyền khi trang được tải
+  useEffect(() => {
+    if (!hasPermission("project.create")) {
+      toast.error("You don't have permission to create projects");
+      router.push("/projects");
+    }
+  }, [hasPermission, router]);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -49,6 +59,12 @@ export default function NewProjectPage() {
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+
+    // Kiểm tra quyền trước khi gửi request
+    if (!hasPermission("project.create")) {
+      toast.error("You don't have permission to create projects");
+      return;
+    }
 
     // Basic validation
     if (!formData.name || !formData.url || !formData.environment) {

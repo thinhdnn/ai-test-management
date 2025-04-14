@@ -9,11 +9,13 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export default function NewFixturePage() {
   const params = useParams<{ id: string }>();
   const projectId = params.id;
   const router = useRouter();
+  const { hasPermission } = usePermission();
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [fixture, setFixture] = useState({
@@ -22,7 +24,20 @@ export default function NewFixturePage() {
     type: "setup"
   });
 
+  // Kiểm tra quyền khi trang được tải
+  useEffect(() => {
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create fixtures");
+      router.push(`/projects/${projectId}/fixtures`);
+    }
+  }, [hasPermission, projectId, router]);
+
   const handleCreateFixture = async () => {
+    if (!hasPermission("testcase.create")) {
+      toast.error("You don't have permission to create fixtures");
+      return;
+    }
+
     if (!fixture.name.trim()) {
       toast.error("Fixture name is required");
       return;

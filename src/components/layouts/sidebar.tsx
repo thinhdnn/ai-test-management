@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,10 +12,25 @@ import {
   LucideMenu,
   LucideX,
   LucideLogOut,
+  LucideWrench,
+  LucideShield,
+  LucideCpu,
+  LucideFolder,
 } from "lucide-react";
 import { SidebarShortcuts } from "./sidebar-shortcuts";
 import { useAuth } from "@/contexts/auth-context";
 import { Skeleton } from "@/components/ui/skeleton";
+import { usePermission } from "@/lib/hooks/usePermission";
+import React from "react";
+
+// Define route type for better type checking
+interface RouteItem {
+  href: string;
+  title: string;
+  icon: React.ComponentType<{ className?: string }>;
+  permission: string;
+  children?: Array<Omit<RouteItem, 'children'>>;
+}
 
 interface SidebarProps {
   className?: string;
@@ -23,50 +38,190 @@ interface SidebarProps {
 
 interface SidebarItemProps {
   href: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon?: React.ComponentType<{ className?: string }>;
   title: string;
   active?: boolean;
+  children?: Array<Omit<SidebarItemProps, 'children'>>;
+  currentPath?: string;
 }
 
-function SidebarItem({ href, icon: Icon, title, active }: SidebarItemProps) {
+function SidebarItem({ href, icon: Icon, title, active, children, currentPath }: SidebarItemProps) {
+  // Initialize expanded state based on whether path starts with href or a child is active
+  const [expanded, setExpanded] = useState(() => {
+    if (!currentPath) return false;
+    
+    // Luôn mở menu Settings theo mặc định
+    if (href === "/settings") return true;
+    
+    // Automatically expand if the current path is a direct match or a child route
+    const isDirectMatch = currentPath === href;
+    const hasActiveChild = children?.some(child => currentPath.startsWith(child.href)) || false;
+    
+    return isDirectMatch || hasActiveChild;
+  });
+  
+  // Don't use useEffect to manage the expanded state anymore - set it only on click
+  
   return (
-    <Link
-      href={href}
-      className={cn(
-        "flex items-center gap-3 rounded-lg px-3 py-2 text-sm transition-all",
-        active
-          ? "bg-accent text-accent-foreground font-medium"
-          : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+    <div>
+      <Link
+        href={href}
+        className={cn(
+          "flex items-center justify-between rounded-lg px-3 py-2 text-sm transition-all",
+          active
+            ? "bg-accent text-accent-foreground font-medium"
+            : "text-muted-foreground hover:bg-accent hover:text-accent-foreground"
+        )}
+        onClick={(e) => {
+          if (children && children.length > 0) {
+            e.preventDefault();
+            setExpanded(!expanded);
+          }
+        }}
+      >
+        <div className="flex items-center gap-3">
+          {Icon && <Icon className="h-5 w-5" />}
+          <span>{title}</span>
+        </div>
+        {children && children.length > 0 && (
+          <span className="text-xs">{expanded ? "▼" : "▶"}</span>
+        )}
+      </Link>
+      
+      {children && children.length > 0 && expanded && (
+        <div className="ml-7 mt-1 space-y-1">
+          {children.map((child) => (
+            <Link
+              key={child.href}
+              href={child.href}
+              className={cn(
+                "flex items-center gap-2 rounded-lg px-3 py-1.5 text-sm transition-all",
+                currentPath?.startsWith(child.href)
+                  ? "bg-accent/70 text-accent-foreground font-medium"
+                  : "text-muted-foreground hover:bg-accent/50 hover:text-accent-foreground"
+              )}
+            >
+              {child.icon && <child.icon className="h-4 w-4" />}
+              <span>{child.title}</span>
+            </Link>
+          ))}
+        </div>
       )}
-    >
-      <Icon className="h-5 w-5" />
-      <span>{title}</span>
-    </Link>
+    </div>
   );
 }
+
+// Define routes outside of the component to prevent recreation on each render
+const ALL_ROUTES: RouteItem[] = [
+  {
+    href: "/dashboard",
+    title: "Dashboard",
+    icon: LucideLayoutDashboard,
+    permission: "project.read"
+  },
+  {
+    href: "/projects",
+    title: "Projects",
+    icon: LucideFolder,
+    permission: "project.read"
+  },
+  {
+    href: "/users",
+    title: "Users",
+    icon: LucideUsers,
+    permission: "user.manage"
+  },
+  {
+    href: "/settings",
+    title: "Settings",
+    icon: LucideSettings,
+    permission: "system.settings",
+    children: [
+      {
+        href: "/settings",
+        title: "General Settings",
+        permission: "system.settings.general",
+        icon: LucideWrench
+      },
+      {
+        href: "/settings/rbac",
+        title: "Roles",
+        permission: "system.settings.rbac",
+        icon: LucideShield
+      },
+      {
+        href: "/settings/ai",
+        title: "AI Configuration",
+        permission: "system.settings.ai",
+        icon: LucideCpu
+      }
+    ]
+  },
+];
 
 export function Sidebar({ className }: SidebarProps) {
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
   const { user, isLoading, logout } = useAuth();
+  const { hasPermission } = usePermission();
+  const [visibleRoutes, setVisibleRoutes] = useState<RouteItem[]>(ALL_ROUTES);
 
-  const routes = [
-    {
-      href: "/projects",
-      title: "Projects",
-      icon: LucideLayoutDashboard,
-    },
-    {
-      href: "/users",
-      title: "Users",
-      icon: LucideUsers,
-    },
-    {
-      href: "/settings",
-      title: "Settings",
-      icon: LucideSettings,
-    },
-  ];
+  // Stabilize the hasPermission reference using useCallback
+  const checkPermission = useCallback((permission: string) => {
+    try {
+      return hasPermission(permission);
+    } catch (e) {
+      console.error("Permission check error:", e);
+      return false;
+    }
+  }, [hasPermission]);
+
+  // Store user ID in a ref to avoid re-renders
+  const userIdRef = React.useRef<string | null>(null);
+  
+  // Update routes when auth status changes
+  useEffect(() => {
+    // Skip if the user ID hasn't changed
+    const currentUserId = user?.id || null;
+    if (userIdRef.current === currentUserId) {
+      // Skip further processing if ID hasn't changed
+      return;
+    }
+    
+    // Update the ref
+    userIdRef.current = currentUserId;
+    
+    // Khi đang loading, giữ nguyên menu
+    if (isLoading) {
+      return;
+    }
+    
+    // Nếu không có user, hiển thị tất cả route
+    if (!user) {
+      setVisibleRoutes(ALL_ROUTES);
+      return;
+    }
+
+    // Filter routes based on user permissions
+    const filtered = ALL_ROUTES
+      .filter(route => checkPermission(route.permission))
+      .map(route => {
+        // Also filter children based on permissions
+        if (route.children) {
+          const filteredChildren = route.children.filter(child => 
+            checkPermission(child.permission)
+          );
+          
+          return {
+            ...route,
+            children: filteredChildren.length > 0 ? filteredChildren : undefined
+          };
+        }
+        return route;
+      });
+
+    setVisibleRoutes(filtered);
+  }, [user?.id, isLoading, checkPermission]);
 
   return (
     <>
@@ -109,15 +264,27 @@ export function Sidebar({ className }: SidebarProps) {
         </div>
         <div className="flex flex-col h-[calc(100%-4rem)] overflow-y-auto">
           <nav className="space-y-1 px-3 py-4">
-            {routes.map((route) => (
-              <SidebarItem
-                key={route.href}
-                href={route.href}
-                icon={route.icon}
-                title={route.title}
-                active={pathname.startsWith(route.href)}
-              />
-            ))}
+            {isLoading ? (
+              // Show skeletons while loading
+              Array(3).fill(0).map((_, i) => (
+                <div key={i} className="flex items-center gap-3 px-3 py-2">
+                  <Skeleton className="h-5 w-5" />
+                  <Skeleton className="h-4 w-24" />
+                </div>
+              ))
+            ) : (
+              visibleRoutes.map((route) => (
+                <SidebarItem
+                  key={route.href}
+                  href={route.href}
+                  icon={route.icon}
+                  title={route.title}
+                  active={pathname === route.href}
+                  children={route.children}
+                  currentPath={pathname}
+                />
+              ))
+            )}
           </nav>
 
           <div className="mt-auto">
@@ -137,7 +304,7 @@ export function Sidebar({ className }: SidebarProps) {
                   <div>
                     <p className="text-sm font-medium">{user.username}</p>
                     <p className="text-xs text-muted-foreground capitalize">
-                      {user.role}
+                      {user.roles?.join(", ") || "No role"}
                     </p>
                   </div>
                   <Button

@@ -57,8 +57,6 @@ export const useKeyboardShortcuts = (shortcuts: KeyboardShortcut[]) => {
       const altKey = event.altKey;
       const shiftKey = event.shiftKey;
 
-      console.log("Key pressed:", event.key, "altKey:", altKey);
-
       // Handle special case for Alt+A on Mac which produces "å"
       if (altKey && event.key === "å") {
         console.log("Detected Option+A (å) on Mac");
