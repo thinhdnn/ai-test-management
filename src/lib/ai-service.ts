@@ -1460,4 +1460,87 @@ Return only the improved test case name without any explanations or additional c
       return testCaseName; // Return original name if there's an error
     }
   }
+
+  async updatePlaywrightWithModifiedSteps(
+    playwrightCode: string,
+    originalSteps: Array<{
+      id: string;
+      order: number;
+      action: string;
+      data?: string | null;
+      expected?: string | null;
+    }>,
+    modifiedSteps: Array<{
+      id: string;
+      order: number;
+      action: string;
+      data?: string | null;
+      expected?: string | null;
+    }>,
+    provider: AIServiceType = "openai"
+  ): Promise<string> {
+    try {
+      const prompt = `
+You are an expert Playwright test automation engineer. I need you to update the following Playwright test code to reflect the modified test steps.
+
+Original Playwright code:
+\`\`\`typescript
+${playwrightCode}
+\`\`\`
+
+Original test steps:
+${JSON.stringify(originalSteps, null, 2)}
+
+Modified test steps:
+${JSON.stringify(modifiedSteps, null, 2)}
+
+Update the Playwright code to implement the modified steps while preserving as much of the existing code structure and patterns as possible.
+Ensure all imports, fixtures, and test structure remain intact.
+Only update the implementation of the test steps that were modified.
+
+IMPORTANT: Return ONLY the raw Playwright code without code block markers (do not include \`\`\`typescript or \`\`\` around the code) and with no additional explanation.
+`;
+
+      let response: string;
+
+      switch (provider) {
+        case "openai":
+          const openai = this.getOpenAIClient();
+          const completion = await openai.chat.completions.create({
+            model: this.model_names.openai,
+            messages: [{ role: "user", content: prompt }],
+            temperature: 0.3,
+          });
+          response = completion.choices[0]?.message?.content || "";
+          break;
+
+        case "gemini":
+          const gemini = this.getGeminiModel();
+          const result = await gemini.generateContent(prompt);
+          response = result.response.text();
+          break;
+
+        case "claude":
+          response = await this.callClaudeAPI(prompt);
+          break;
+
+        case "grok":
+          response = await this.callGrokAPI(prompt);
+          break;
+
+        default:
+          throw new Error(`Unsupported AI provider: ${provider}`);
+      }
+
+      // Đảm bảo kết quả không có dấu hiệu định dạng code bằng cách loại bỏ chúng nếu có
+      let cleanedResponse = response.trim();
+      cleanedResponse = cleanedResponse.replace(/^```(\w+)?/, '');
+      cleanedResponse = cleanedResponse.replace(/```$/, '');
+      
+      return cleanedResponse.trim();
+    } catch (error) {
+      console.error("Error updating Playwright code with modified steps:", error);
+      return playwrightCode; // Return original code if there's an error
+    }
+  }
 }

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -132,13 +131,7 @@ export default function NewFixturePage() {
             />
           </div>
         </CardContent>
-        <CardFooter className="flex justify-between">
-          <Button
-            onClick={handleCreateFixture}
-            disabled={isSubmitting || !fixture.name.trim()}
-          >
-            {isSubmitting ? "Creating..." : "Create Fixture"}
-          </Button>
+        <CardFooter className="flex justify-end">
           <div className="text-xs text-muted-foreground self-center">
             Press <kbd className="px-1 py-0.5 text-xs border rounded-md">Ctrl+Enter</kbd> to submit
           </div>

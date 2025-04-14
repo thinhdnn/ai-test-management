@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { ProjectSettings } from "@/components/project/project-settings";
@@ -34,6 +34,7 @@ export default function ProjectSettingsPage() {
   const router = useRouter();
   const projectId = params.id;
   const { hasPermission } = usePermission();
+  const hasCheckedPermission = useRef(false);
 
   const [project, setProject] = useState<Project | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -80,51 +81,158 @@ export default function ProjectSettingsPage() {
   });
   const [isSavingConfig, setIsSavingConfig] = useState(false);
 
+  // Kiểm tra quyền riêng biệt trước khi thực hiện bất kỳ thao tác nào khác
   useEffect(() => {
-    // Kiểm tra quyền xem cài đặt dự án
+    // Chỉ kiểm tra quyền một lần
+    if (hasCheckedPermission.current) return;
+    
     if (!hasPermission("project.view")) {
       toast.error("You don't have permission to view project settings");
       router.push(`/projects/${projectId}`);
       return;
     }
     
-    // Fetch project details
-    const fetchProject = async () => {
+    hasCheckedPermission.current = true;
+  }, [hasPermission, projectId, router]);
+
+  // Chỉ fetch dữ liệu sau khi đã kiểm tra quyền
+  useEffect(() => {
+    if (!hasCheckedPermission.current) return;
+    
+    const abortController = new AbortController();
+    let timeoutId: NodeJS.Timeout | undefined;
+    
+    const fetchData = async () => {
       try {
         setLoading(true);
-        const response = await fetch(`/api/projects/${projectId}`);
+        
+        // Đặt timeout để đảm bảo luôn kết thúc trạng thái loading
+        timeoutId = setTimeout(() => {
+          if (loading) {
+            setLoading(false);
+          }
+        }, 15000);
+        
+        // Fetch project data
+        const response = await fetch(`/api/projects/${projectId}`, {
+          signal: abortController.signal
+        });
+        
         if (!response.ok) {
+          if (response.status === 401) {
+            toast.error("Unauthorized access");
+            router.push("/login");
+            return;
+          }
+          
           if (response.status === 404) {
             setError("Project not found");
           } else {
-            setError("Failed to load project data");
+            setError(`Failed to load project data (${response.status})`);
           }
+          setLoading(false);
           return;
         }
-        const data = await response.json();
-        setProject(data);
-        setEditedProject(data);
+        
+        const projectData = await response.json();
+        setProject(projectData);
+        setEditedProject(projectData);
+        
+        // Fetch Playwright config after project data is loaded
+        try {
+          const configResponse = await fetch(`/api/projects/${projectId}/config`, {
+            signal: abortController.signal
+          });
+          
+          if (configResponse.ok) {
+            const config = await configResponse.json();
+            
+            setPlaywrightConfig(prev => ({
+              ...prev,
+              baseUrl: config.url || prev.baseUrl,
+              ...(config.browsers && { browsers: config.browsers }),
+              ...(config.viewport && { viewport: config.viewport }),
+              ...(config.testDir && { testDir: config.testDir }),
+              ...(config.timeout !== undefined && { timeout: config.timeout }),
+              reporters: config.reporter 
+                ? config.reporter.map((r: any) => Array.isArray(r) ? r[0] : r) 
+                : [],
+              reportFileNames: config.reporter 
+                ? config.reporter.reduce((acc: any, r: any) => {
+                    if (Array.isArray(r) && r[1]?.outputFile) {
+                      acc[r[0]] = r[1].outputFile;
+                    }
+                    return acc;
+                  }, {}) 
+                : {}
+            }));
+          }
+        } catch (configError) {
+          // Lỗi khi lấy config không nên ngăn hiển thị project
+          console.error("Error fetching config:", configError);
+        }
+        
         setError(null);
+        setLoading(false);
       } catch (err) {
-        setError("Error loading project details");
-        console.error(err);
-      } finally {
-        // Add a small timeout to prevent flickering
-        setTimeout(() => {
+        if ((err as any)?.name !== 'AbortError') {
+          console.error("Error loading project:", err);
+          setError("Error loading project details");
           setLoading(false);
-        }, 100);
+        }
+      } finally {
+        if (timeoutId) clearTimeout(timeoutId);
       }
     };
+    
+    fetchData();
+    
+    return () => {
+      abortController.abort();
+      if (timeoutId) clearTimeout(timeoutId);
+    };
+  }, [projectId, router, hasCheckedPermission.current]);
 
-    fetchProject();
-  }, [projectId, hasPermission, router]);
-
-  useEffect(() => {
-    // Get Playwright configuration when project is loaded
-    if (project?.id) {
-      fetchPlaywrightConfig();
+  const fetchPlaywrightConfig = useCallback(async () => {
+    if (!projectId) return;
+    
+    try {
+      setConfigLoading(true);
+      const response = await fetch(`/api/projects/${projectId}/config`);
+      
+      if (response.ok) {
+        const config = await response.json();
+        setPlaywrightConfig(prev => ({
+          ...prev,
+          baseUrl: config.url || prev.baseUrl,
+          ...(config.browsers && { browsers: config.browsers }),
+          ...(config.viewport && { viewport: config.viewport }),
+          ...(config.testDir && { testDir: config.testDir }),
+          ...(config.timeout !== undefined && { timeout: config.timeout }),
+          reporters: config.reporter 
+            ? config.reporter.map((r: any) => Array.isArray(r) ? r[0] : r) 
+            : [],
+          reportFileNames: config.reporter 
+            ? config.reporter.reduce((acc: any, r: any) => {
+                if (Array.isArray(r) && r[1]?.outputFile) {
+                  acc[r[0]] = r[1].outputFile;
+                }
+                return acc;
+              }, {}) 
+            : {}
+        }));
+      }
+    } catch (error) {
+      console.error("Error fetching Playwright config:", error);
+    } finally {
+      setConfigLoading(false);
     }
-  }, [project?.id]);
+  }, [projectId]);
+
+  // Handles manual reset of loading state
+  const handleManualLoadingReset = useCallback(() => {
+    setLoading(false);
+  }, []);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -186,51 +294,6 @@ export default function ProjectSettingsPage() {
   const handleCancel = () => {
     setEditedProject(project);
     setEditMode(false);
-  };
-
-  // Function to fetch Playwright configuration from API
-  const fetchPlaywrightConfig = async () => {
-    try {
-      setConfigLoading(true);
-      const response = await fetch(`/api/projects/${projectId}/config`);
-      if (response.ok) {
-        const config = await response.json();
-        console.log('Received config:', config);
-
-        // Update state with configuration from server
-        setPlaywrightConfig((prev) => ({
-          ...prev,
-          baseUrl: config.url || prev.baseUrl,
-          // Update other values if they exist in config
-          ...(config.browsers && {
-            browsers: config.browsers,
-          }),
-          ...(config.viewport && {
-            viewport: config.viewport,
-          }),
-          ...(config.testDir && {
-            testDir: config.testDir,
-          }),
-          ...(config.timeout !== undefined && {
-            timeout: config.timeout,
-          }),
-          // Extract reporters from config
-          reporters: config.reporter ? config.reporter.map((r: any) => 
-            Array.isArray(r) ? r[0] : r
-          ) : [],
-          reportFileNames: config.reporter ? config.reporter.reduce((acc: any, r: any) => {
-            if (Array.isArray(r) && r[1]?.outputFile) {
-              acc[r[0]] = r[1].outputFile;
-            }
-            return acc;
-          }, {}) : {}
-        }));
-      }
-    } catch (error) {
-      console.error("Error fetching Playwright config:", error);
-    } finally {
-      setConfigLoading(false);
-    }
   };
 
   // Function to handle input changes for Playwright configuration
@@ -354,8 +417,6 @@ export default function ProjectSettingsPage() {
         reportFileNames: playwrightConfig.reportFileNames,
       };
 
-      console.log('Saving config with:', requestBody);
-
       const response = await fetch(`/api/projects/${projectId}/config`, {
         method: "PATCH",
         headers: {
@@ -366,7 +427,7 @@ export default function ProjectSettingsPage() {
 
       if (response.ok) {
         toast.success("Playwright configuration saved successfully");
-        fetchPlaywrightConfig(); // Update configuration
+        fetchPlaywrightConfig();
       } else {
         const errorData = await response.json();
         toast.error(
@@ -385,8 +446,15 @@ export default function ProjectSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <p className="text-muted-foreground">Loading project settings...</p>
+      <div className="flex flex-col items-center justify-center h-64 gap-3">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+        <p className="text-muted-foreground font-medium">Loading project settings...</p>
+        <button 
+          className="text-xs text-blue-500 hover:underline" 
+          onClick={handleManualLoadingReset}
+        >
+          Click here if loading takes too long
+        </button>
       </div>
     );
   }

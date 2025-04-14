@@ -153,14 +153,6 @@ export default function ProjectFixturesPage() {
   return (
     <>
       <FixturesTab projectId={projectId} />
-      
-      {/* Nút tạo fixture mới với kiểm tra quyền */}
-      <div className="flex justify-end mt-4 mb-6">
-        <Button onClick={handleOpenCreateDialog}>
-          Create New Fixture
-        </Button>
-      </div>
-      
       {/* Dialog tạo fixture mới */}
       <Dialog open={showNewFixtureDialog} onOpenChange={setShowNewFixtureDialog}>
         <DialogContent>

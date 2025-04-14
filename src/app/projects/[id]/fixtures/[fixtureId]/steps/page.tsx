@@ -425,6 +425,33 @@ export default function FixtureStepsPage() {
     }
   };
 
+  // Function to handle cloning the fixture
+  const handleCloneFixture = async () => {
+    try {
+      setIsSaving(true);
+      const response = await fetch(`/api/projects/${projectId}/fixtures/${fixtureId}/clone`, {
+        method: "POST"
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to clone fixture");
+      }
+
+      const data = await response.json();
+      toast.success("Fixture cloned successfully");
+      
+      // Redirect to the new cloned fixture
+      if (data.fixture && data.fixture.id) {
+        window.location.href = `/projects/${projectId}/fixtures/${data.fixture.id}/steps`;
+      }
+    } catch (error) {
+      console.error("Error cloning fixture:", error);
+      toast.error("Failed to clone fixture");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Handle reordering steps
   const handleReorderSteps = async (reorderedSteps: TestStep[]) => {
     setIsSaving(true);
@@ -679,7 +706,7 @@ export default function FixtureStepsPage() {
               <TooltipTrigger asChild>
                 <Button
                   variant="outline"
-                  onClick={() => handleCloneStep}
+                  onClick={handleCloneFixture}
                   disabled={isSaving}
                 >
                   <Copy className="h-4 w-4" />

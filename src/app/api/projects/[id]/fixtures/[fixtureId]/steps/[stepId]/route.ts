@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { getCurrentUserId, AuditFields } from "@/lib/auth-utils";
+import { getAIService } from "@/lib/ai-service";
+import { getAIProviderType } from "@/lib/ai-provider";
 
 // Step input validation schema
 const stepSchema = z.object({
@@ -115,6 +117,60 @@ export async function PUT(
       
       // Regular update
       const validatedData = stepSchema.parse(body);
+      
+      // Only process the Playwright code update if the action or data or expected has changed
+      if (
+        step.action !== validatedData.action ||
+        step.data !== validatedData.data ||
+        step.expected !== validatedData.expected
+      ) {
+        try {
+          // Get the current fixture to know the test name
+          const fixture = await prisma.fixture.findUnique({
+            where: {
+              id: fixtureId,
+            },
+          });
+          
+          if (fixture && step.playwrightCode) {
+            // Convert the database step to the format expected by the AI service
+            const originalStep = {
+              id: step.id,
+              order: step.order,
+              action: step.action,
+              data: step.data || null,
+              expected: step.expected || null,
+            };
+            
+            // Create the modified step with the new values
+            const modifiedStep = {
+              id: step.id,
+              order: step.order,
+              action: validatedData.action,
+              data: validatedData.data || null,
+              expected: validatedData.expected || null,
+            };
+            
+            // Get the current AI provider
+            const aiProvider = await getAIProviderType();
+            const aiService = await getAIService();
+            
+            // Update the Playwright code
+            const updatedCode = await aiService.updatePlaywrightWithModifiedSteps(
+              step.playwrightCode,
+              [originalStep],
+              [modifiedStep],
+              aiProvider
+            );
+            
+            // Add the updated Playwright code to the data to be saved
+            validatedData.playwrightCode = updatedCode;
+          }
+        } catch (error) {
+          console.error("Error updating Playwright code:", error);
+          // Continue with the save even if updating the code fails
+        }
+      }
       
       // Update the step
       const updatedStep = await prisma.testStep.update({

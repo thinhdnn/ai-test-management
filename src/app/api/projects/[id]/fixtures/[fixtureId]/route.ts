@@ -48,10 +48,12 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string; fixtureId: string } }
+  { params }: { params: Promise<{ id: string; fixtureId: string }> }
 ) {
   try {
-    const { fixtureId } = params;
+    // Await params trước khi sử dụng
+    const resolvedParams = await params;
+    const fixtureId = resolvedParams.fixtureId;
     const userId = getCurrentUserId(request);
     
     if (!userId) {
@@ -64,8 +66,13 @@ export async function PUT(
     // Get the fixture data from request body
     const body = await request.json();
     
-    // Validate the input data
-    const validatedData = fixtureSchema.parse(body);
+    // Cập nhật schema để chấp nhận null cho tags
+    const fixtureSchemaForUpdate = fixtureSchema.extend({
+      tags: z.string().nullable().optional(),
+    });
+    
+    // Validate the input data với schema đã cập nhật
+    const validatedData = fixtureSchemaForUpdate.parse(body);
     
     // Update the fixture
     const fixture = await prisma.fixture.update({

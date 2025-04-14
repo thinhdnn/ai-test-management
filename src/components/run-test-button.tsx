@@ -25,6 +25,7 @@ import {
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { usePermission } from "@/lib/hooks/usePermission";
 
 export type RunTestMode = "single" | "all";
 
@@ -67,6 +68,7 @@ export function RunTestButton({
   const [headless, setHeadless] = useState<boolean>(true);
   const [showTestResult, setShowTestResult] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
+  const { hasPermission } = usePermission();
 
   const handleRunTest = async () => {
     try {
@@ -168,7 +170,7 @@ export function RunTestButton({
         if (onClick) onClick(e);
         setShowBrowserDialog(true);
       }}
-      disabled={isRunning || disabled}
+      disabled={isRunning || disabled || !hasPermission("testcase.run")}
       className={`${fullWidth ? "w-full" : ""} ${className}`}
       data-test-id={
         mode === "single" ? "run-test-button" : "run-all-tests-button"
