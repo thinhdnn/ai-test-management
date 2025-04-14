@@ -45,7 +45,7 @@ export interface TestCase {
   testFilePath?: string | null;
   playwrightCodeSource?: string;
   playwrightTestScript?: string | null;
-  version?: string;
+  version: string;
   isManual?: boolean;
 }
 
@@ -53,6 +53,7 @@ export interface TestCase {
 export interface TestCaseWithProject extends TestCase {
   project: Project;
   testFilePath: string | null;
+  testSteps?: TestStep[];
 }
 
 // TestStep type - test steps management

@@ -3,6 +3,23 @@ import { prisma } from "@/lib/db";
 import { getAIProvider } from "@/lib/ai-provider";
 import { getCurrentUserId, AuditFields } from "@/lib/auth-utils";
 import { createNewVersion } from "@/lib/version-utils";
+import { GeminiTestStepResponse } from "@/types";
+
+// Helper function to increment version
+function incrementVersion(version: string): string {
+  const parts = version.split('.');
+  if (parts.length !== 3) {
+    return '1.0.1'; // Default if format is incorrect
+  }
+  
+  const major = parseInt(parts[0]);
+  const minor = parseInt(parts[1]);
+  let patch = parseInt(parts[2]);
+  
+  patch += 1;
+  
+  return `${major}.${minor}.${patch}`;
+}
 
 export async function GET(
   request: Request,
@@ -92,7 +109,7 @@ export async function PUT(
             action,
             data,
             expected
-          );
+          ) as string | GeminiTestStepResponse;
 
           // Handle string response (backward compatibility)
           if (typeof generatedStep === "string") {
@@ -155,7 +172,25 @@ export async function PUT(
 
     // Create a new version after updating a step
     try {
-      await createNewVersion(testCaseId, userId ?? undefined);
+      // Lấy test case để có thông tin phiên bản hiện tại
+      const testCase = await prisma.testCase.findUnique({
+        where: { id: testCaseId }
+      });
+      
+      if (testCase) {
+        // Tính phiên bản mới
+        const currentVersion = testCase.version || "1.0.0";
+        const nextVersion = incrementVersion(currentVersion);
+        
+        // Cập nhật phiên bản trong test case
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: { version: nextVersion }
+        });
+        
+        // Tạo phiên bản với số phiên bản mới
+        await createNewVersion(testCaseId, userId ?? undefined, nextVersion, false);
+      }
     } catch (error) {
       console.error("Error creating version after updating step:", error);
       // Continue even if version creation fails
@@ -204,7 +239,25 @@ export async function PATCH(
 
     // Create a new version after patching a step
     try {
-      await createNewVersion(testCaseId, userId ?? undefined);
+      // Lấy test case để có thông tin phiên bản hiện tại
+      const testCase = await prisma.testCase.findUnique({
+        where: { id: testCaseId }
+      });
+      
+      if (testCase) {
+        // Tính phiên bản mới
+        const currentVersion = testCase.version || "1.0.0";
+        const nextVersion = incrementVersion(currentVersion);
+        
+        // Cập nhật phiên bản trong test case
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: { version: nextVersion }
+        });
+        
+        // Tạo phiên bản với số phiên bản mới
+        await createNewVersion(testCaseId, userId ?? undefined, nextVersion, false);
+      }
     } catch (error) {
       console.error("Error creating version after patching step:", error);
       // Continue even if version creation fails
@@ -285,7 +338,25 @@ export async function DELETE(
 
     // Create a new version after deleting a step
     try {
-      await createNewVersion(testCaseId, userId ?? undefined);
+      // Lấy test case để có thông tin phiên bản hiện tại
+      const testCase = await prisma.testCase.findUnique({
+        where: { id: testCaseId }
+      });
+      
+      if (testCase) {
+        // Tính phiên bản mới
+        const currentVersion = testCase.version || "1.0.0";
+        const nextVersion = incrementVersion(currentVersion);
+        
+        // Cập nhật phiên bản trong test case
+        await prisma.testCase.update({
+          where: { id: testCaseId },
+          data: { version: nextVersion }
+        });
+        
+        // Tạo phiên bản với số phiên bản mới
+        await createNewVersion(testCaseId, userId ?? undefined, nextVersion, false);
+      }
     } catch (error) {
       console.error("Error creating version after deleting step:", error);
       // Continue even if version creation fails

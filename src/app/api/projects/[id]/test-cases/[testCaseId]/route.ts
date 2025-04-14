@@ -7,6 +7,7 @@ import { toKebabCase } from "@/lib/utils";
 import { TestCase, Project } from "@prisma/client";
 import { TestCaseWithProject } from "@/types";
 import { getAIProvider } from "@/lib/ai-provider";
+import { createNewVersion } from "@/lib/version-utils";
 
 export async function GET(
   request: Request,
@@ -119,6 +120,11 @@ export async function PUT(
       },
       include: {
         project: true,
+        testSteps: {
+          orderBy: {
+            order: 'asc'
+          }
+        }
       },
     }) as TestCaseWithProject | null;
 
@@ -157,6 +163,10 @@ export async function PUT(
       }
     }
 
+    // Calculate the next version number
+    const currentVersion = currentTestCase.version || "1.0.0";
+    const nextVersion = incrementVersion(currentVersion);
+
     // If name changed and test file exists, rename the file
     if (data.name !== currentTestCase.name && currentTestCase.testFilePath && currentTestCase.project.playwrightProjectPath) {
       try {
@@ -173,6 +183,7 @@ export async function PUT(
       }
     }
 
+    // Update the test case with new version number
     const testCase = await prisma.testCase.update({
       where: {
         id: testCaseId,
@@ -184,9 +195,19 @@ export async function PUT(
         status: data.status,
         tags: tagData,
         testFilePath: data.testFilePath,
+        version: nextVersion,
         ...AuditFields.forUpdate(userId),
       },
     });
+
+    // Create a version record using the utility function with force=true
+    // and use the NEW version number, not the old one
+    try {
+      await createNewVersion(testCaseId, userId ?? undefined, nextVersion, true);
+    } catch (error) {
+      console.error("Error creating version after updating test case:", error);
+      // Continue even if version creation fails
+    }
 
     // Parse tags for response
     let parsedTags: string[] = [];
@@ -210,6 +231,7 @@ export async function PUT(
       createdAt: testCase.createdAt,
       lastRun: testCase.lastRun,
       tags: parsedTags,
+      version: testCase.version,
     });
   } catch (error) {
     console.error("Error updating test case:", error);
@@ -220,6 +242,22 @@ export async function PUT(
   }
 }
 
+// Helper function to increment version
+function incrementVersion(version: string): string {
+  const parts = version.split('.');
+  if (parts.length !== 3) {
+    return '1.0.1'; // Default if format is incorrect
+  }
+  
+  const major = parseInt(parts[0]);
+  const minor = parseInt(parts[1]);
+  let patch = parseInt(parts[2]);
+  
+  patch += 1;
+  
+  return `${major}.${minor}.${patch}`;
+}
+
 export async function DELETE(
   request: Request,
   { params }: { params: Promise<{ id: string; testCaseId: string }> }
@@ -228,6 +266,7 @@ export async function DELETE(
     const resolvedParams = await params;
     const projectId = resolvedParams.id;
     const testCaseId = resolvedParams.testCaseId;
+    const userId = getCurrentUserId(request);
 
     // Check if the test case exists
     const testCase = await prisma.testCase.findUnique({
@@ -246,6 +285,19 @@ export async function DELETE(
         { error: "Test case not found" },
         { status: 404 }
       );
+    }
+
+    // Create a final version before deletion for archival purposes
+    try {
+      // Tính phiên bản mới
+      const currentVersion = testCase.version || "1.0.0";
+      const nextVersion = incrementVersion(currentVersion);
+      
+      // Lưu phiên bản mới thay vì phiên bản cũ
+      await createNewVersion(testCaseId, userId ?? undefined, nextVersion, true);
+    } catch (error) {
+      console.error("Error creating final version before deletion:", error);
+      // Continue with deletion even if version creation fails
     }
 
     // Delete test file if it exists

@@ -22,33 +22,33 @@ model Project {
   updatedBy             String?
   lastRunBy             String?
   lastRun               DateTime?
-  fixtures              Fixture[]
-  permissions           PermissionAssignment[] @relation("ProjectPermissions")
   testCases             TestCase[]
   testResults           TestResultHistory[]
+  permissions           PermissionAssignment[] @relation("ProjectPermissions")
+  fixtures              Fixture[]
 
   @@map("projects")
 }
 
 model TestCase {
-  id                   String                 @id @default(uuid())
+  id                   String              @id @default(uuid())
   projectId            String
   name                 String
   description          String?
-  status               String                 @default("pending")
-  version              String                 @default("1.0.0")
+  status               String              @default("pending")
+  version              String              @default("1.0.0")
   playwrightTestScript String?
-  isManual             Boolean                @default(false)
-  createdAt            DateTime               @default(now())
+  isManual             Boolean             @default(false)
+  createdAt            DateTime            @default(now())
   lastRun              DateTime?
-  updatedAt            DateTime               @updatedAt
+  updatedAt            DateTime            @updatedAt
   createdBy            String?
   updatedBy            String?
   lastRunBy            String?
   tags                 String?
   testFilePath         String?
   playwrightCodeSource String?
-  project              Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project              Project             @relation(fields: [projectId], references: [id], onDelete: Cascade)
   testResults          TestResultHistory[]
   testSteps            TestStep[]
   versions             TestCaseVersion[]
@@ -56,7 +56,7 @@ model TestCase {
 }
 
 model TestStep {
-  id             String    @id @default(uuid())
+  id             String   @id @default(uuid())
   testCaseId     String?
   fixtureId      String?
   action         String
@@ -64,14 +64,14 @@ model TestStep {
   expected       String?
   playwrightCode String?
   selector       String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   createdBy      String?
   updatedBy      String?
   order          Int
-  disabled       Boolean   @default(false)
-  fixture        Fixture?  @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
+  disabled       Boolean  @default(false)
   testCase       TestCase? @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  fixture        Fixture? @relation(fields: [fixtureId], references: [id], onDelete: Cascade)
 }
 
 model TestResultHistory {
@@ -89,18 +89,17 @@ model TestResultHistory {
   lastRunBy     String?
   browser       String?
   videoUrl      String?
-  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   testCase      TestCase? @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
 model User {
-  id          String                 @id @default(uuid())
-  username    String                 @unique
-  email       String?
+  id          String   @id @default(uuid())
+  username    String   @unique
   password    String
-  isActive    Boolean                @default(true)
-  createdAt   DateTime               @default(now())
-  updatedAt   DateTime               @updatedAt
+  role        String   @default("user")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
   createdBy   String?
   updatedBy   String?
   permissions PermissionAssignment[] @relation("UserPermissions")
@@ -108,34 +107,35 @@ model User {
 }
 
 model Setting {
-  id        String   @id @default(uuid())
-  key       String   @unique
-  value     String
-  userId    String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  createdBy String?
-  updatedBy String?
+  id         String   @id @default(uuid())
+  key        String   @unique
+  value      String
+  userId     String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  createdBy  String?
+  updatedBy  String?
 }
 
+// RBAC Models
 model Permission {
-  id                    String                 @id @default(uuid())
-  name                  String                 @unique
-  description           String?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
+  id             String                 @id @default(uuid())
+  name           String                 @unique
+  description    String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  rolePermissions RolePermission[]
   permissionAssignments PermissionAssignment[]
-  rolePermissions       RolePermission[]
 }
 
 model Role {
-  id          String           @id @default(uuid())
-  name        String           @unique
-  description String?
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
-  permissions RolePermission[]
-  users       UserRole[]
+  id             String           @id @default(uuid())
+  name           String           @unique
+  description    String?
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  permissions    RolePermission[]
+  users          UserRole[]
 }
 
 model RolePermission {
@@ -143,8 +143,8 @@ model RolePermission {
   roleId       String
   permissionId String
   createdAt    DateTime   @default(now())
-  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
   role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
   @@unique([roleId, permissionId])
 }
@@ -154,75 +154,76 @@ model UserRole {
   userId    String
   roleId    String
   createdAt DateTime @default(now())
-  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
   user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@unique([userId, roleId])
 }
 
-model PermissionAssignment {
-  id           String   @id @default(uuid())
-  userId       String
-  permissionId String
-  resourceType String // Loại resource: "project", "testcase", etc.
-  resourceId   String // ID của resource
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
 
-  user       User       @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
-  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
-  project    Project?   @relation("ProjectPermissions", fields: [resourceId], references: [id], onDelete: Cascade)
-  testCase   TestCase?  @relation("TestCasePermissions", fields: [resourceId], references: [id], onDelete: Cascade)
+model PermissionAssignment {
+  id            String     @id @default(uuid())
+  userId        String
+  permissionId  String
+  resourceType  String     // Loại resource: "project", "testcase", etc.
+  resourceId    String     // ID của resource
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+
+  user          User       @relation("UserPermissions", fields: [userId], references: [id], onDelete: Cascade)
+  permission    Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  project       Project?   @relation("ProjectPermissions", fields: [resourceId], references: [id], onDelete: Cascade)
+  testCase      TestCase?  @relation("TestCasePermissions", fields: [resourceId], references: [id], onDelete: Cascade)
 
   @@unique([userId, permissionId, resourceType, resourceId])
 }
 
 model TestCaseVersion {
-  id                   String            @id @default(uuid())
+  id                   String              @id @default(uuid())
   testCaseId           String
   version              String
   name                 String
   description          String?
   playwrightTestScript String?
-  createdAt            DateTime          @default(now())
+  createdAt            DateTime            @default(now())
   createdBy            String?
-  testCase             TestCase          @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
+  testCase             TestCase            @relation(fields: [testCaseId], references: [id], onDelete: Cascade)
   testStepVersions     TestStepVersion[]
 }
 
 model TestStepVersion {
-  id                String          @id @default(uuid())
+  id             String           @id @default(uuid())
   testCaseVersionId String
-  action            String
-  data              String?
-  expected          String?
-  playwrightCode    String?
-  selector          String?
-  order             Int
-  disabled          Boolean         @default(false)
-  createdAt         DateTime        @default(now())
-  createdBy         String?
-  testCaseVersion   TestCaseVersion @relation(fields: [testCaseVersionId], references: [id], onDelete: Cascade)
+  action         String
+  data           String?
+  expected       String?
+  playwrightCode String?
+  selector       String?
+  order          Int
+  disabled       Boolean          @default(false)
+  createdAt      DateTime         @default(now())
+  createdBy      String?
+  testCaseVersion TestCaseVersion @relation(fields: [testCaseVersionId], references: [id], onDelete: Cascade)
 }
 
 model Fixture {
-  id              String     @id @default(uuid())
-  projectId       String
-  name            String
-  description     String?
-  content         String?
-  type            String     @default("data")
-  tags            String?
-  filename        String?
-  path            String?
-  exportName      String?
-  createdAt       DateTime   @default(now())
-  updatedAt       DateTime   @updatedAt
-  createdBy       String?
-  updatedBy       String?
+  id          String    @id @default(uuid())
+  projectId   String
+  name        String
+  description String?
+  content     String?
+  type        String    @default("data")
+  tags        String?
+  filename    String?   // Tên file của fixture (vd: login_admin.js)
+  path        String?   // Đường dẫn tương đối (vd: fixtures/login_admin)
+  exportName  String?   // Tên biến được export (vd: loginadmin)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  createdBy   String?
+  updatedBy   String?
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  steps       TestStep[]
   fixtureFilePath String?
-  project         Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  steps           TestStep[]
 }
 
 model Tag {

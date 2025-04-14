@@ -42,7 +42,7 @@ export async function POST(
         projectId: projectId,
         tags: existingTestCase.tags,
         playwrightCodeSource: existingTestCase.playwrightCodeSource,
-        version: existingTestCase.version,
+        version: "1.0.0", // Reset version to 1.0.0 for the cloned test case
       },
     });
 
