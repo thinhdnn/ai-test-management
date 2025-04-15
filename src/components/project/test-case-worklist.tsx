@@ -530,11 +530,12 @@ export function TestCaseWorklist({
                     </td>
                     <td
                       className="p-2 cursor-pointer"
-                      onClick={() =>
+                      onClick={(e) => {
+                        e.stopPropagation();
                         router.push(
                           `/projects/${projectId}/test-cases/${testCase.id}`
-                        )
-                      }
+                        );
+                      }}
                     >
                       <div className="flex items-center justify-end space-x-1">
                         {canRunTestCase && (
@@ -542,6 +543,7 @@ export function TestCaseWorklist({
                             projectId={projectId}
                             testCaseId={testCase.id}
                             size="icon"
+                            variant="ghost"
                             onClick={(e) => e.stopPropagation()}
                             onTestRunComplete={() => refreshTestCases()}
                           />

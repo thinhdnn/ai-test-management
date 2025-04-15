@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Play } from "lucide-react";
 import { toast } from "sonner";
@@ -63,17 +63,47 @@ export function RunTestButton({
   onClick,
 }: RunTestButtonProps) {
   const [isRunning, setIsRunning] = useState(false);
-  const [showBrowserDialog, setShowBrowserDialog] = useState(false);
+  const [browserDialogOpen, setBrowserDialogOpen] = useState(false);
   const [selectedBrowser, setSelectedBrowser] = useState<string>("chromium");
   const [headless, setHeadless] = useState<boolean>(true);
-  const [showTestResult, setShowTestResult] = useState(false);
+  const [resultDialogOpen, setResultDialogOpen] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
   const { hasPermission } = usePermission();
+  
+  // Ref to track if component is mounted
+  const isMounted = useRef(true);
+  
+  // Clean up effect
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
+  // Function to safely update state
+  const safeSetState = (setter: Function, value: any) => {
+    if (isMounted.current) {
+      setter(value);
+    }
+  };
+
+  // Handle button click
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    e.preventDefault();
+    
+    if (onClick) {
+      onClick(e);
+    }
+    
+    setBrowserDialogOpen(true);
+  };
+
+  // Handle run test
   const handleRunTest = async () => {
     try {
       setIsRunning(true);
-      setShowBrowserDialog(false);
+      setBrowserDialogOpen(false);
 
       const payload =
         mode === "single" && testCaseId
@@ -107,7 +137,7 @@ export function RunTestButton({
 
       const result = await response.json();
       setTestResult(result);
-      setShowTestResult(true);
+      setResultDialogOpen(true);
 
       if (result.success) {
         toast.success(
@@ -142,6 +172,20 @@ export function RunTestButton({
     }
   };
 
+  // Close result dialog and refresh if needed
+  const closeResultDialog = () => {
+    setResultDialogOpen(false);
+    if (onRefreshTestCases) {
+      setTimeout(() => {
+        onRefreshTestCases();
+      }, 100);
+    } else {
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    }
+  };
+
   const buttonContent = () => {
     if (isRunning) {
       if (size === "icon") {
@@ -162,14 +206,12 @@ export function RunTestButton({
     );
   };
 
+  // Main button
   const button = (
     <Button
       variant={variant}
       size={size}
-      onClick={(e) => {
-        if (onClick) onClick(e);
-        setShowBrowserDialog(true);
-      }}
+      onClick={handleButtonClick}
       disabled={isRunning || disabled || !hasPermission("testcase.run")}
       className={`${fullWidth ? "w-full" : ""} ${className}`}
       data-test-id={
@@ -181,8 +223,13 @@ export function RunTestButton({
     </Button>
   );
 
+  // Render
   return (
-    <>
+    <div 
+      onClick={(e) => e.stopPropagation()} 
+      className="inline-block"
+      style={{ isolation: "isolate" }}
+    >
       {showShortcut && mode === "single" ? (
         <ShortcutTooltip
           shortcut={formatShortcut("Ctrl+R")}
@@ -194,94 +241,103 @@ export function RunTestButton({
         button
       )}
 
-      <Dialog open={showBrowserDialog} onOpenChange={setShowBrowserDialog}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>
-              {mode === "single"
-                ? "Select browser to run test"
-                : "Select browser to run all tests"}
-            </DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="browser" className="text-right">
-                Browser
-              </Label>
-              <Select
-                value={selectedBrowser}
-                onValueChange={setSelectedBrowser}
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="Choose browser" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="chromium">Chromium</SelectItem>
-                  <SelectItem value="firefox">Firefox</SelectItem>
-                  <SelectItem value="webkit">WebKit (Safari)</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="headless" className="text-right">
-                Headless
-              </Label>
-              <div className="flex items-center space-x-2 col-span-3">
-                <Checkbox
-                  id="headless"
-                  checked={headless}
-                  onCheckedChange={(checked) => setHeadless(checked as boolean)}
-                />
-                <label
-                  htmlFor="headless"
-                  className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                >
-                  Hide browser when running test
-                </label>
+      {/* Browser selection dialog */}
+      {browserDialogOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center" onClick={(e) => e.stopPropagation()}>
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg max-w-md w-full p-6" onClick={(e) => e.stopPropagation()}>
+            <h3 className="text-lg font-medium mb-4">
+              {mode === "single" ? "Select browser to run test" : "Select browser to run all tests"}
+            </h3>
+            
+            <div className="space-y-4">
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="browser" className="text-right">
+                  Browser
+                </Label>
+                <div className="col-span-3">
+                  <Select
+                    value={selectedBrowser}
+                    onValueChange={setSelectedBrowser}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Choose browser" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="chromium">Chromium</SelectItem>
+                      <SelectItem value="firefox">Firefox</SelectItem>
+                      <SelectItem value="webkit">WebKit (Safari)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-4 items-center gap-4">
+                <Label htmlFor="headless" className="text-right">
+                  Headless
+                </Label>
+                <div className="flex items-center space-x-2 col-span-3">
+                  <Checkbox
+                    id="headless"
+                    checked={headless}
+                    onCheckedChange={(checked) => setHeadless(checked as boolean)}
+                  />
+                  <label
+                    htmlFor="headless"
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    Hide browser when running test
+                  </label>
+                </div>
               </div>
             </div>
-          </div>
-          <DialogFooter>
-            <Button
-              onClick={() => setShowBrowserDialog(false)}
-              variant="outline"
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleRunTest} disabled={isRunning}>
-              {isRunning
-                ? mode === "single"
-                  ? "Running test..."
-                  : "Running all tests..."
-                : mode === "single"
-                ? "Run Test"
-                : "Run All Tests"}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
+            <div className="mt-6 flex justify-end space-x-3">
+              <Button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setBrowserDialogOpen(false);
+                }}
+                variant="outline"
+              >
+                Cancel
+              </Button>
+              <Button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleRunTest();
+                }}
+                disabled={isRunning}
+              >
+                {isRunning
+                  ? mode === "single"
+                    ? "Running test..."
+                    : "Running all tests..."
+                  : mode === "single"
+                  ? "Run Test"
+                  : "Run All Tests"}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Test results dialog */}
       <Dialog
-        open={showTestResult}
+        open={resultDialogOpen}
         onOpenChange={(open) => {
-          setShowTestResult(open);
-          if (!open) {
-            // Only refresh when dialog is closed
-            if (onRefreshTestCases) {
-              onRefreshTestCases();
-            } else {
-              window.location.reload();
-            }
-          }
+          if (!open) closeResultDialog();
         }}
       >
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent 
+          className="max-w-3xl max-h-[80vh] overflow-y-auto"
+          onClick={(e) => e.stopPropagation()}
+        >
           <DialogHeader>
             <DialogTitle>Test Results</DialogTitle>
           </DialogHeader>
 
           {testResult ? (
-            <div className="py-4 space-y-4">
+            <div className="py-4 space-y-4" onClick={(e) => e.stopPropagation()}>
               <div
                 className={`p-3 rounded-md ${
                   testResult.success ? "bg-green-50" : "bg-red-50"
@@ -404,11 +460,18 @@ export function RunTestButton({
             </div>
           )}
 
-          <DialogFooter>
-            <Button onClick={() => setShowTestResult(false)}>Close</Button>
+          <DialogFooter onClick={(e) => e.stopPropagation()}>
+            <Button 
+              onClick={(e) => {
+                e.stopPropagation();
+                closeResultDialog();
+              }}
+            >
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </div>
   );
 }

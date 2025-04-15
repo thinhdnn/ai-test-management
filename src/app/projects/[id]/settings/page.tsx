@@ -101,6 +101,7 @@ export default function ProjectSettingsPage() {
     
     const abortController = new AbortController();
     let timeoutId: NodeJS.Timeout | undefined;
+    let isActive = true; // Add a flag to track if the request is still active
     
     const fetchData = async () => {
       try {
@@ -118,6 +119,8 @@ export default function ProjectSettingsPage() {
           signal: abortController.signal
         });
         
+        if (!isActive) return; // Check if component is still mounted
+
         if (!response.ok) {
           if (response.status === 401) {
             toast.error("Unauthorized access");
@@ -135,6 +138,7 @@ export default function ProjectSettingsPage() {
         }
         
         const projectData = await response.json();
+        if (!isActive) return; // Check again after async operation
         setProject(projectData);
         setEditedProject(projectData);
         
@@ -144,9 +148,12 @@ export default function ProjectSettingsPage() {
             signal: abortController.signal
           });
           
+          if (!isActive) return; // Check if still active
+          
           if (configResponse.ok) {
             const config = await configResponse.json();
             
+            if (!isActive) return; // Check again after async operation
             setPlaywrightConfig(prev => ({
               ...prev,
               baseUrl: config.url || prev.baseUrl,
@@ -169,12 +176,15 @@ export default function ProjectSettingsPage() {
           }
         } catch (configError) {
           // Lỗi khi lấy config không nên ngăn hiển thị project
+          if (!isActive) return; // Check if still active
           console.error("Error fetching config:", configError);
         }
         
+        if (!isActive) return; // Final check before state updates
         setError(null);
         setLoading(false);
       } catch (err) {
+        if (!isActive) return; // Check if still active
         if ((err as any)?.name !== 'AbortError') {
           console.error("Error loading project:", err);
           setError("Error loading project details");
@@ -188,6 +198,7 @@ export default function ProjectSettingsPage() {
     fetchData();
     
     return () => {
+      isActive = false; // Mark as inactive when component unmounts
       abortController.abort();
       if (timeoutId) clearTimeout(timeoutId);
     };
