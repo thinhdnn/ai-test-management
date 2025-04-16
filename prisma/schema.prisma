@@ -32,6 +32,7 @@ model Project {
 
 model TestCase {
   id                   String              @id @default(uuid())
+  order                Int?                 @default(0)
   projectId            String
   name                 String
   description          String?
@@ -96,8 +97,9 @@ model TestResultHistory {
 model User {
   id          String   @id @default(uuid())
   username    String   @unique
+  email       String?
   password    String
-  role        String   @default("user")
+  isActive    Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
   createdBy   String?
@@ -160,7 +162,7 @@ model UserRole {
   @@unique([userId, roleId])
 }
 
-
+// Model cho phép gán quyền trực tiếp cho user trên một resource cụ thể
 model PermissionAssignment {
   id            String     @id @default(uuid())
   userId        String

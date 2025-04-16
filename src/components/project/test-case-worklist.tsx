@@ -22,6 +22,9 @@ import {
   ChevronDown,
   ChevronUp,
   CalendarIcon,
+  ArrowUp,
+  ArrowDown,
+  MoreHorizontal,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -45,6 +48,13 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { usePermission } from "@/lib/hooks/usePermission";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Label } from "@/components/ui/label";
 
 interface TestCase {
   id: string;
@@ -56,6 +66,7 @@ interface TestCase {
   steps: number;
   tags: string[];
   isManual?: boolean;
+  order?: number;
 }
 
 interface TestCaseWorklistProps {
@@ -80,6 +91,10 @@ export function TestCaseWorklist({
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
   const [showTestResult, setShowTestResult] = useState(false);
   const [testResult, setTestResult] = useState<any>(null);
+  const [isReordering, setIsReordering] = useState(false);
+  const [showMoveDialog, setShowMoveDialog] = useState(false);
+  const [selectedTestCase, setSelectedTestCase] = useState<string | null>(null);
+  const [targetPosition, setTargetPosition] = useState<number>(1);
   const itemsPerPage = 10;
 
   // Kiểm tra quyền để biết người dùng có thể tạo test case hay không
@@ -134,6 +149,13 @@ export function TestCaseWorklist({
         createdAtMatch &&
         lastRunMatch
       );
+    })
+    // Sort by order field
+    .sort((a, b) => {
+      // Get order values (default to max value if not set)
+      const orderA = a.order !== undefined ? a.order : Number.MAX_SAFE_INTEGER;
+      const orderB = b.order !== undefined ? b.order : Number.MAX_SAFE_INTEGER;
+      return orderA - orderB;
     });
   }, [
     testCases,
@@ -160,6 +182,83 @@ export function TestCaseWorklist({
       prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag]
     );
     resetPage();
+  };
+
+  // Function to open move dialog
+  const openMoveDialog = (testCaseId: string) => {
+    setSelectedTestCase(testCaseId);
+    
+    // Find the current position to set as default
+    const currentTestCase = currentTestCases.find(tc => tc.id === testCaseId);
+    if (currentTestCase?.order) {
+      setTargetPosition(currentTestCase.order);
+    } else {
+      setTargetPosition(1);
+    }
+    
+    setShowMoveDialog(true);
+  };
+
+  // Function to handle test case reordering
+  const handleMoveTestCase = async () => {
+    if (!selectedTestCase || targetPosition < 1 || targetPosition > filteredTestCases.length) {
+      return;
+    }
+
+    try {
+      setIsReordering(true);
+      
+      // Find current index
+      const currentIndex = currentTestCases.findIndex(tc => tc.id === selectedTestCase);
+      if (currentIndex === -1) {
+        setShowMoveDialog(false);
+        return;
+      }
+      
+      // Create a copy of all filtered test cases
+      const allTestCases = [...filteredTestCases];
+      
+      // Get the test case to move
+      const testCaseToMove = allTestCases[currentIndex];
+      
+      // Remove the test case from its current position
+      allTestCases.splice(currentIndex, 1);
+      
+      // Calculate the target index (position - 1, as positions are 1-based)
+      // Ensure it's within range
+      const targetIndex = Math.min(Math.max(targetPosition - 1, 0), allTestCases.length);
+      
+      // Insert the test case at the target position
+      allTestCases.splice(targetIndex, 0, testCaseToMove);
+      
+      // Update order values for all test cases
+      const reorderedTestCases = allTestCases.map((tc, index) => ({
+        id: tc.id,
+        order: index + 1 // 1-based order
+      }));
+      
+      // Call API to update order in the database
+      const response = await fetch(`/api/projects/${projectId}/test-cases/reorder`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ testCases: reorderedTestCases }),
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update test case order');
+      }
+      
+      // Refresh test cases to get updated data
+      await refreshTestCases();
+      
+    } catch (error) {
+      console.error('Error reordering test cases:', error);
+    } finally {
+      setIsReordering(false);
+      setShowMoveDialog(false);
+    }
   };
 
   if (testCases.length === 0) {
@@ -424,6 +523,46 @@ export function TestCaseWorklist({
         </CardContent>
       </Card>
 
+      {/* Move Dialog */}
+      <Dialog open={showMoveDialog} onOpenChange={setShowMoveDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Move Test Case</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="targetPosition">Move to position:</Label>
+              <Input
+                id="targetPosition"
+                type="number"
+                min={1}
+                max={filteredTestCases.length}
+                value={targetPosition}
+                onChange={(e) => setTargetPosition(parseInt(e.target.value) || 1)}
+              />
+              <p className="text-sm text-muted-foreground">
+                Enter a position between 1 and {filteredTestCases.length}
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowMoveDialog(false)}
+              disabled={isReordering}
+            >
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleMoveTestCase}
+              disabled={isReordering}
+            >
+              {isReordering ? 'Moving...' : 'Move'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Table and rest of the content */}
       {filteredTestCases.length === 0 ? (
         <div className="text-center py-8">
@@ -437,6 +576,9 @@ export function TestCaseWorklist({
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b bg-muted/50">
+                  <th className="px-4 py-2 text-center font-medium border">
+                    Order
+                  </th>
                   <th className="px-4 py-2 text-center font-medium border">
                     Name
                   </th>
@@ -472,6 +614,33 @@ export function TestCaseWorklist({
                     }
                     title="Double-click to view details"
                   >
+                    <td className="px-4 py-2 border text-center">
+                      <div className="flex items-center justify-center">
+                        <span className="mr-2">{testCase.order || "-"}</span>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-7 w-7"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openMoveDialog(testCase.id);
+                              }}
+                            >
+                              Move to...
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </td>
                     <td className="px-4 py-2 border">
                       <div>
                         <div className="font-medium">{testCase.name}</div>

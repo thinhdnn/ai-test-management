@@ -47,6 +47,7 @@ export interface TestCase {
   playwrightTestScript?: string | null;
   version: string;
   isManual?: boolean;
+  order?: number;
 }
 
 // TestCaseWithProject type - test case with project information

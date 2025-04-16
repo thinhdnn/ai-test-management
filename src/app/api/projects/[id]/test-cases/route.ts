@@ -20,11 +20,11 @@ export async function GET(
           select: { testSteps: true },
         },
       },
-      orderBy: { createdAt: "desc" },
+      orderBy: { order: "asc" },
     });
 
     // Transform data to match the structure used in the frontend
-    const transformedTestCases = testCases.map((testCase) => {
+    const transformedTestCases = testCases.map((testCase, index) => {
       // Parse tags from JSON string
       const tags = testCase.tags ? JSON.parse(testCase.tags) : [];
 
@@ -38,6 +38,8 @@ export async function GET(
         tags,
         steps: testCase._count.testSteps,
         isManual: testCase.isManual || false,
+        // Temporarily use index + 1 as order until database schema is updated
+        order: index + 1,
       };
     });
 
@@ -75,6 +77,15 @@ export async function POST(
       return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
     
+    // Find the highest current order value to place the new test case at the end
+    const maxOrderTestCase = await prisma.testCase.findFirst({
+      where: { projectId },
+      orderBy: { order: 'desc' },
+    });
+    
+    // Calculate next order value (max + 1, or 1 if no test cases exist)
+    const nextOrder = maxOrderTestCase?.order ? maxOrderTestCase.order + 1 : 1;
+    
     // Verify project path exists
     if (project.playwrightProjectPath && !body.isManual) {
       if (!fs.existsSync(project.playwrightProjectPath)) {
@@ -94,6 +105,7 @@ export async function POST(
         status: body.status || "pending",
         tags: tagsJson,
         isManual: body.isManual || false,
+        order: nextOrder, // Set to the calculated next order value
         projectId: projectId,
         ...AuditFields.forCreate(userId),
       },
